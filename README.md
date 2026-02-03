@@ -46,7 +46,7 @@ Full experimental details, methodology, and validation are provided in the accom
 
 
 
-\- \[DTDR Overview (PDF)](docs/DTDR\_Overview.pdf)  
+\- [\[DTDR Overview (PDF)](docs/DTDR\_Overview.pdf)](https://github.com/UnrealJon/DTDR/blob/main/docs/DTDR_Overview.pdf)  
 
 \- Experimental Evidence (PDF forthcoming)  
 
@@ -125,6 +125,7 @@ Commercial use requires separate licensing.
 
 
 See \[LICENSE](LICENSE) and \[LICENSE\_NOTICE.md](LICENSE\_NOTICE.md) for details.
+
 
 
 
