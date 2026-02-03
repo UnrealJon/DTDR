@@ -10,7 +10,7 @@ This repository provides a reference implementation and accompanying technical d
 
 
 
-\- \[DTDR Overview (PDF)](https://github.com/UnrealJon/DTDR/blob/main/docs/DTDR\_Overview.pdf)
+\- \[DTDR Overview (PDF)](https://github.com/UnrealJon/DTDR/blob/main/docs/DTDR_Overview.pdf)
 
 \- Experimental Evidence (PDF *forthcoming)*
 
@@ -31,4 +31,5 @@ The author is open to discussions with commercial or industrial partners regardi
 
 
 Enquiries of this nature may be directed via GitHub or through appropriate professional channels.
+
 
