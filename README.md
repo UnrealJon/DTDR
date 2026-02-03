@@ -12,9 +12,9 @@ This repository provides a reference implementation and accompanying technical d
 
 \- \[DTDR Overview (PDF)](docs/DTDR\_Overview.pdf)
 
-\- Experimental Evidence (PDF)
+\- Experimental Evidence (PDF *forthcoming)*
 
-\- Why DTDR is Not Compression (PDF)
+\- Why DTDR is Not Compression (PDF *forthcoming*)
 
 
 
