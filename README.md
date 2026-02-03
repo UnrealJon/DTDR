@@ -16,6 +16,28 @@ representation for semantically encoded high-dimensional numerical data.
 
 
 
-This repository accompanies a filed patent application.
-UK PATENT APPLICATION NUMBER 2602157.6
+
+## Commercial and Licensing Enquiries
+
+
+
+DTDR is the subject of a filed UK patent application UK PATENT APPLICATION NUMBER 2602157.6. The material in this repository is provided to support technical evaluation and discussion.
+
+
+
+The author is open to discussions with commercial or industrial partners regarding
+
+licensing, assignment, or acquisition of the associated intellectual property, particularly
+
+in contexts involving large-scale model storage, vector databases, edge deployment, or
+
+memory- and bandwidth-constrained systems.
+
+
+
+Enquiries of this nature may be directed via GitHub or through appropriate professional
+
+channels.
+
+
 
