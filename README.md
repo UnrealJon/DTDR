@@ -2,21 +2,11 @@
 
 
 
-DTDR is a persistent transform-domain representation for semantically encoded
-
-high-dimensional numerical data that enables \*\*substantial size reduction\*\*
-
-while preserving computational geometry.
+DTDR is a persistent transform-domain representation for semantically encoded high-dimensional numerical data that enables \*\*substantial size reduction\*\* while preserving computational geometry.
 
 
 
-Unlike conventional compression schemes, DTDR representations remain
-
-\*\*computationally meaningful at rest\*\*, supporting direct similarity search,
-
-inference, and reconstruction to a working numerical precision, with graceful
-
-degradation under quantisation or partial data loss.
+Unlike conventional compression schemes, DTDR representations remain \*\*computationally meaningful at rest\*\*, supporting direct similarity search, inference, and reconstruction to a working numerical precision, with graceful degradation under quantisation or partial data loss.
 
 
 
@@ -40,15 +30,11 @@ degradation under quantisation or partial data loss.
 
 
 
-Additional lossless compression applied to DTDR representations has been shown
-
-to yield a further ~30–35% reduction in storage footprint.
+Additional lossless compression applied to DTDR representations has been shown to yield a further ~30–35% reduction in storage footprint.
 
 
 
-Full experimental details, methodology, and validation are provided in the
-
-accompanying documentation.
+Full experimental details, methodology, and validation are provided in the accompanying documentation.
 
 
 
@@ -98,11 +84,7 @@ Commercial deployment requires a separate commercial and patent licence.
 
 
 
-The author is open to discussions with commercial or industrial partners
-
-regarding licensing, assignment, or acquisition of the associated intellectual
-
-property, particularly in contexts involving:
+The author is open to discussions with commercial or industrial partners regarding licensing, assignment, or acquisition of the associated intellectual property, particularly in contexts involving:
 
 
 
@@ -130,17 +112,11 @@ property, particularly in contexts involving:
 
 
 
-This repository is licensed under the  
-
-\*\*Creative Commons Attribution–NonCommercial 4.0 International (CC BY-NC 4.0)\*\* license.
+This repository is licensed under the   \*\*Creative Commons Attribution–NonCommercial 4.0 International (CC BY-NC 4.0)\*\* license.
 
 
 
-Research, technical evaluation, internal testing, and non-commercial
-
-experimentation — including modification for evaluation purposes — are
-
-permitted.
+Research, technical evaluation, internal testing, and non-commercial experimentation — including modification for evaluation purposes — are permitted.
 
 
 
