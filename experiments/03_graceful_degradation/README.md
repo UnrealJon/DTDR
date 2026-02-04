@@ -21,24 +21,19 @@ Output similarity between the corrupted DTDR model and the floating-point baseli
 
 Corruption levels are swept over multiple fractions (0%–2%) to observe the progression of degradation.
 
-Observations
+How to Run
 
-Outputs produced from partially corrupted DTDR representations remain closely aligned with the floating-point baseline at low corruption levels.
+From a Python environment with PyTorch installed:
 
-Both cosine similarity and relative L2 error degrade smoothly and monotonically as the corruption fraction increases.
+python dtdr_corruption_sweep.py
 
-No abrupt loss of functionality is observed, even when a non-trivial fraction of DTDR coefficients is corrupted.
 
-These observations are consistent with a representation in which information is distributed across coefficients rather than localised.
+The script is fully self-contained and requires no additional configuration.
 
-Scope and Limitations
+On completion, it will:
 
-This experiment focuses exclusively on robustness to partial corruption of stored model parameters.
+print similarity metrics for each corruption level to the console
 
-It does not measure inference throughput, latency, or hardware-level performance.
+write a CSV file containing the results:
 
-The model architecture is intentionally minimal and serves only as a controlled testbed for storage-level robustness.
-
-Conclusion
-
-This experiment demonstrates that DTDR-encoded model parameters exhibit graceful degradation under controlled corruption of their transform-domain representation. The results support the use of DTDR as a robust persistent memory format for numerical model parameters, with predictable and proportional degradation characteristics under data loss or corruption.
+dtdr_corruption_sweep.csv
