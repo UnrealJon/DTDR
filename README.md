@@ -80,6 +80,21 @@ This provides a **coarse localisation signal** that is:
 In practice, this allows ANN systems to operate effectively at lower probe counts,
 where conventional IVF methods discard the most information.
 
+## Quick Example
+```python
+from dtdr import DTDR
+from dtdr.search import DTDRSearch
+
+# Compress and search
+dtdr = DTDR(dimension=256, bits=8)
+compressed = dtdr.encode(vectors)  # 3-4× smaller
+
+# Build ANN index entirely in DTDR domain
+index = DTDRSearch(compressed, method='ivf-hnsw')
+results = index.query(query, k=10)  # Direct DTDR search
+```
+
+See [experiments/](experiments/) for complete implementations.
 ---
 
 ## Why DTDR Is Not Just Compression
@@ -109,6 +124,7 @@ experiments/
 └── 02_dtdr_end_to_end_search/
     └── End-to-end ANN search entirely in the DTDR domain
 
+---
 
 Patent & Commercial Licensing
 
