@@ -36,6 +36,19 @@ Additional lossless compression applied to DTDR representations has been shown t
 
 Full experimental details, methodology, and validation are provided in the accompanying documentation.
 
+**Experimental provenance:**
+
+- **Mistral-7B (FP16 → DTDR)** results are demonstrated in  
+  `experiments/01_model_inference` and `experiments/04_storage_accounting`.
+
+- **384-D embeddings** similarity preservation is demonstrated in  
+  `experiments/02_embedding_search`.
+
+- **Graceful degradation behaviour** is demonstrated in  
+  `experiments/03_graceful_degradation`.
+
+- **Storage footprint reductions** are summarised in  
+  `experiments/04_storage_accounting`.
 
 
 ---
