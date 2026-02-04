@@ -50,7 +50,7 @@ Full experimental details, methodology, and validation are provided in the accom
 
 \- Experimental Evidence (PDF forthcoming)  
 
-\- Why DTDR Is Not Compression [(PDF forthcoming)](https://github.com/UnrealJon/DTDR/blob/main/docs/DTDR_Overview.pdf)
+\- Why DTDR Is Not Compression (https://github.com/UnrealJon/DTDR/blob/main/docs/Why_DTDR_is_not_compression.pdf)
 
 
 
@@ -125,6 +125,7 @@ Commercial use requires separate licensing.
 
 
 See \[LICENSE](LICENSE) and \[LICENSE\_NOTICE.md](LICENSE\_NOTICE.md) for details.
+
 
 
 
