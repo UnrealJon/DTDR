@@ -2,96 +2,101 @@
 
 DTDR is a method for representing numerical data — including machine-learning model parameters
 and vector embeddings — in a **distributed transform domain** that preserves computational
-functionality while substantially reducing memory footprint and bandwidth pressure.
+functionality while reducing memory footprint and bandwidth pressure.
 
-Unlike conventional compression, DTDR produces a **search- and compute-capable representation**
-that can be used directly for inference, similarity search, and approximate nearest-neighbour (ANN)
-pipelines without reconstructing full-precision data.
+Unlike conventional compression, DTDR maintains a **compute-capable representation**:
+inference, similarity search, and approximate nearest-neighbour (ANN) traversal can be performed
+*directly in the transformed domain*, without reconstructing full-precision data.
 
-This repository contains **reference implementations and experiments** demonstrating these
-properties.
-
----
-
-## Why DTDR?
-
-Most systems today follow the pattern:
-
-> full-precision representation → compression → reconstruction → computation
-
-DTDR enables an alternative:
-
-> **compressed-but-structured representation → native computation**
-
-Key properties:
-
-- Information is **distributed across coefficients**, not localised
-- Partial corruption degrades functionality **gracefully**
-- The representation remains compatible with existing kernels and distance metrics
-- Computation can occur **directly in the transformed domain**
-
-These properties make DTDR especially relevant for **memory-bound workloads**.
+This repository contains **reference implementations and experiments** demonstrating these properties.
 
 ---
 
-## Key Results (Summary)
+## TL;DR (What’s new here)
 
-### 1. Model Inference from DTDR Storage
+- **3–4× storage reduction** for large models and embeddings  
+- **End-to-end ANN search entirely in DTDR** (IVF + HNSW + binary reranking)  
+- **Novel ANN signal (“dilution evidence”)** that recovers large fractions of recall at low probe counts  
+- Improvements are **orthogonal** to existing ANN optimisations — DTDR adds *new capability*, not just compression  
+
+---
+
+## Key Results
+
+### Model Storage & Inference
 
 DTDR-compressed model parameters can be reconstructed to a *working numerical precision*
 sufficient for standard inference, without specialised kernels.
 
-In a reference implementation using a 7-billion-parameter language model:
+| Model | FP16 | DTDR-INT8 | Compression | Similarity |
+|------|------|-----------|-------------|------------|
+| Mistral-7B | 14.5 GB | 6.7 GB | 2.2× | 0.9998 |
 
-- FP16 baseline: ~14.5 GB
-- DTDR-INT8 stored representation: ~6.7–6.8 GB
-- Inference throughput: comparable to or faster than FP16
-- Robustness under controlled corruption
+*Inference throughput comparable to FP16 baseline.*
 
 See **Experiment 01** for details.
 
 ---
 
-### 2. End-to-End ANN Search Entirely in the DTDR Domain
+### End-to-End ANN Search (DTDR Domain)
 
-DTDR can act as a **unified numerical domain** for approximate nearest-neighbour search.
+DTDR can act as a **unified numerical domain** for ANN pipelines.
 
-In **Experiment 02**, we demonstrate an end-to-end ANN pipeline operating *entirely* on DTDR
-vectors, integrating:
+In **Experiment 02**, we demonstrate an end-to-end ANN search operating *entirely* on DTDR vectors,
+integrating IVF, HNSW, and binary distance estimation — with no full-precision reconstruction.
 
-- IVF (inverted file indexing)
-- HNSW (graph-based ANN traversal)
-- Binary distance estimation (RaBitQ-like)
-- A DTDR-specific multi-resolution “dilution evidence” signal for coarse localisation
-
-No full-precision reconstruction is required at any stage.
-
-#### Representative results (50k vectors, CPU, Python):
-
-| Configuration | Recall@10 | Mean query time |
-|--------------|-----------|-----------------|
+| Configuration | Recall@10 | Mean latency |
+|--------------|-----------|--------------|
 | DTDR-IVF-HNSW-Binary (`nprobe=4`) | 0.63 | 2.9 ms |
 | **+ DTDR dilution evidence (`nprobe=4`)** | **0.78** | **3.1 ms** |
 | DTDR-IVF-HNSW-Binary (`nprobe=8`) | 0.80 | 4.9 ms |
 
-DTDR dilution evidence recovers ~15 percentage points of absolute recall in the low-`nprobe`
-regime, approaching the recall of a higher-cost baseline with substantially lower latency.
+**Interpretation:**
 
-This behaviour is smooth, interpretable, and consistent with established ANN theory.
+DTDR’s multi-resolution dilution evidence recovers ~15 percentage points of absolute recall
+at low probe counts, approaching the recall of a higher-cost baseline with ~37–40% lower latency.
+
+This behaviour is smooth, interpretable, and consistent with ANN theory — but the signal itself
+does **not exist** in standard vector representations.
+
+See **Experiment 02** for full methodology and results.
 
 ---
 
-## Why This Is Not Just Compression
+## What Is “Dilution Evidence”?
 
-DTDR differs fundamentally from conventional codecs:
+DTDR distributes information across coefficients at multiple aggregation scales.
+By examining how similarity signals persist under progressive aggregation (or dilution),
+it is possible to infer *which regions of the database are likely to contain relevant neighbours*
+before probing them.
 
-- It is **not optimised for reconstruction fidelity alone**
-- It preserves **computational semantics**
-- It supports **direct similarity, traversal, and inference**
-- It exposes additional signals (e.g. multi-resolution persistence) that do not exist in
-  standard representations
+This provides a **coarse localisation signal** that is:
 
-DTDR should be viewed as a **numerical representation**, not a storage format.
+- independent of centroids,
+- orthogonal to graph traversal,
+- inexpensive to compute,
+- and unavailable in representations where information is localised.
+
+In practice, this allows ANN systems to operate effectively at lower probe counts,
+where conventional IVF methods discard the most information.
+
+---
+
+## Why DTDR Is Not Just Compression
+
+Compression schemes optimise **reconstruction fidelity**.
+
+DTDR optimises **functional equivalence**.
+
+Key differences:
+
+- Information is deliberately **distributed**, not localised
+- Partial corruption leads to **graceful degradation**, not artefacts
+- Exact reconstruction is optional — sometimes undesirable
+- Computation, similarity, and traversal can occur **directly in the transformed domain**
+- DTDR exposes **new usable structure** (e.g. multi-resolution persistence)
+
+DTDR should therefore be viewed as a **numerical representation**, not a storage format.
 
 ---
 
@@ -103,3 +108,20 @@ experiments/
 │   └── DTDR-compressed model inference benchmarks
 └── 02_dtdr_end_to_end_search/
     └── End-to-end ANN search entirely in the DTDR domain
+
+
+Patent & Commercial Licensing
+
+DTDR is the subject of a filed UK patent application:
+
+UK Patent Application No. GB2602157.6
+
+This repository is provided for research and evaluation purposes.
+
+For commercial licensing, strategic partnerships, or IP inquiries:
+
+Contact: dtdr@multiverse1.com
+
+See LICENSE-NOTICE.md  https://github.com/UnrealJon/DTDR/blob/main/LICENSE_NOTICE.md
+ for evaluation terms.
+
