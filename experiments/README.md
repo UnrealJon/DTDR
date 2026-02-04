@@ -1,57 +1,85 @@
+# DTDR Experiments
+
+This directory contains a set of **focused, claim-aligned experiments and demonstrations**
+illustrating the properties and capabilities of the Distributed Transform-Domain Representation (DTDR).
+
+Each numbered subdirectory contains:
+- a runnable reference implementation, and
+- a self-contained README describing purpose, methodology, and results.
+
+The files in this directory are intended to be read in the order suggested below.
+
+---
+
 ## Primary Demonstration
 
-The notebook `DTDR_RAG_double_transform_demo.ipynb` provides an
-end-to-end demonstration of DTDR as a functional representation,
-integrating:
+The script:
+
+
+located in this directory provides an end-to-end demonstration of DTDR as a
+**functional numerical representation**, integrating:
 
 - composite (double) DTDR constructions,
 - direct similarity search in the transform domain,
-- and retrieval-style workflows.
+- retrieval-style (RAG-like) workflows.
 
-Readers looking for a single, self-contained demonstration of DTDR
-behaviour may wish to begin here. The numbered experiment folders
-provide focused, claim-aligned supporting evidence.
-
-
-
-# Experiment 01 — Functional Reconstruction of a DTDR-Stored Model
-
-## Purpose
-
-This experiment demonstrates that a numerical model stored in a **Distributed Transform-Domain Representation (DTDR)** can be reconstructed to a working numerical precision that is *functionally equivalent* to the original floating-point representation.
-
-The objective is to show that DTDR constitutes a **persistent representation**, not merely a compression scheme.
+This script is intended as a **conceptual and functional demonstration**, rather than a
+benchmarked experiment. Readers looking for a single, self-contained illustration of
+DTDR behaviour may wish to begin here before exploring the numbered experiments below.
 
 ---
 
-## Method Summary
+## Experiment Index
 
-1. A reference floating-point model is taken as a baseline.
-2. The same model parameters are stored in a DTDR form using a structured orthogonal transform and quantisation.
-3. The DTDR representation is reconstructed to a working numerical precision.
-4. Functional equivalence between the baseline and reconstructed models is evaluated using similarity metrics.
-5. Controlled perturbation of DTDR coefficients is applied to test robustness.
+### Experiment 01 — Functional Reconstruction of a DTDR-Stored Model
 
----
+**Location:** `experiments/01_model_inference/`
 
-## Observations
+Demonstrates that a numerical model stored in DTDR form can be reconstructed to a
+numerically different but **functionally equivalent** representation suitable for inference.
 
-- The reconstructed DTDR model exhibits cosine similarity extremely close to unity when compared to the floating-point baseline.
-- Relative L2 error remains small and stable.
-- Partial corruption of DTDR coefficients results in only marginal degradation of similarity metrics.
+Focus:
+- DTDR as a *persistent stored representation*
+- functional equivalence versus reconstruction fidelity
+- robustness under controlled coefficient perturbation
 
-These results are consistent with a representation in which information is distributed across coefficients rather than localised.
+See: `experiments/01_model_inference/README.md`
 
 ---
 
-## Scope and Limitations
+### Experiment 02 — End-to-End ANN Search in the DTDR Domain
 
-- This experiment evaluates *functional equivalence*, not inference throughput.
-- Execution was performed on CPU for clarity and reproducibility.
-- Performance benchmarking and GPU execution are addressed in separate experiments.
+**Location:** `experiments/02_dtdr_end_to_end_search/`
+
+Demonstrates an end-to-end approximate nearest-neighbour (ANN) search pipeline
+operating *entirely* in the DTDR domain, integrating:
+
+- IVF (inverted file indexing),
+- HNSW graph traversal,
+- binary distance estimation (RaBitQ-like),
+- DTDR-specific multi-resolution dilution evidence for coarse localisation.
+
+Focus:
+- DTDR as a native computational domain
+- ANN recall/latency trade-offs
+- novel localisation signals enabled by distributed representations
+
+See: `experiments/02_dtdr_end_to_end_search/README.md`
 
 ---
 
-## Conclusion
+## Conceptual Ordering
 
-The results demonstrate that DTDR enables persistent storage of numerical model parameters while permitting reconstruction to a numerically different but functionally equivalent representation suitable for inference and further computation.
+The experiments are ordered deliberately:
+
+1. **Primary Demonstration**  
+   Introduces DTDR as a functional and composable numerical representation.
+
+2. **Experiment 01**  
+   Establishes DTDR as a persistent representation that preserves computational functionality.
+
+3. **Experiment 02**  
+   Demonstrates the consequences of treating DTDR as a primary computational domain,
+   including new ANN search strategies and signals.
+
+Additional experiments may be added in future as the framework evolves.
