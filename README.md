@@ -1,147 +1,105 @@
-### \# DTDR — Distributed Transform-Domain Representation
+# DTDR — Distributed Transform-Domain Representation
 
+DTDR is a method for representing numerical data — including machine-learning model parameters
+and vector embeddings — in a **distributed transform domain** that preserves computational
+functionality while substantially reducing memory footprint and bandwidth pressure.
 
+Unlike conventional compression, DTDR produces a **search- and compute-capable representation**
+that can be used directly for inference, similarity search, and approximate nearest-neighbour (ANN)
+pipelines without reconstructing full-precision data.
 
-DTDR is a persistent transform-domain representation for semantically encoded high-dimensional numerical data that enables \*\*substantial size reduction\*\* while preserving computational geometry.
-
-
-
-Unlike conventional compression schemes, DTDR representations remain \*\*computationally meaningful at rest\*\*, supporting direct similarity search, inference, and reconstruction to a working numerical precision, with graceful degradation under quantisation or partial data loss.
-
-
-
----
-
-
-
-\## Key Results (Summary)
-
-
-
-| Scenario              | Original Size | DTDR Size | Reduction | Fidelity / Functionality |
-
-|-----------------------|---------------|-----------|-----------|---------------------------|
-
-| Mistral-7B (FP16)     | 14.5 GB       | 6.7 GB    | 2.2×      | ~0.9998 cosine similarity |
-
-| SIFT1M vectors        | 488 MB        | 122 MB    | 4.0×      | ~94% recall@1             |
-
-| 384-D embeddings      | 24.4 MB       | 8.1 MB    | 3.0×      | ~0.9997 cosine similarity |
-
-
-
-Additional lossless compression applied to DTDR representations has been shown to yield a further ~30–35% reduction in storage footprint.
-
-
-
-Full experimental details, methodology, and validation are provided in the accompanying documentation.
-
-**Experimental provenance:**
-
-- **Mistral-7B (FP16 → DTDR)** results are demonstrated in  
-  `experiments/01_model_inference` and `experiments/04_storage_accounting`.
-
-- **384-D embeddings** similarity preservation is demonstrated in  
-  `experiments/02_embedding_search`.
-
-- **Graceful degradation behaviour** is demonstrated in  
-  `experiments/03_graceful_degradation`.
-
-- **Storage footprint reductions** are summarised in  
-  `experiments/04_storage_accounting`.
-
+This repository contains **reference implementations and experiments** demonstrating these
+properties.
 
 ---
 
+## Why DTDR?
 
+Most systems today follow the pattern:
 
-\## Documentation
+> full-precision representation → compression → reconstruction → computation
 
+DTDR enables an alternative:
 
+> **compressed-but-structured representation → native computation**
 
-\- [\[DTDR Overview (PDF)](docs/DTDR\_Overview.pdf)](https://github.com/UnrealJon/DTDR/blob/main/docs/DTDR_Overview.pdf)  
+Key properties:
 
-\- Experimental Evidence (https://github.com/UnrealJon/DTDR/tree/main/experiments)  
+- Information is **distributed across coefficients**, not localised
+- Partial corruption degrades functionality **gracefully**
+- The representation remains compatible with existing kernels and distance metrics
+- Computation can occur **directly in the transformed domain**
 
-\- Why DTDR Is Not Compression (https://github.com/UnrealJon/DTDR/blob/main/docs/Why_DTDR_is_not_compression.pdf)
-
-
-
----
-
-
-
-\## Patent Status
-
-
-
-DTDR is the subject of a filed UK patent application:
-
-
-
-\*\*UK Patent Application No. GB 2602157.6\*\*
-
-
-
-Patent rights are independent of the accompanying code and documentation.
-
-Commercial deployment requires a separate commercial and patent licence.
-
-
+These properties make DTDR especially relevant for **memory-bound workloads**.
 
 ---
 
+## Key Results (Summary)
 
+### 1. Model Inference from DTDR Storage
 
-\## Commercial Licensing
+DTDR-compressed model parameters can be reconstructed to a *working numerical precision*
+sufficient for standard inference, without specialised kernels.
 
+In a reference implementation using a 7-billion-parameter language model:
 
+- FP16 baseline: ~14.5 GB
+- DTDR-INT8 stored representation: ~6.7–6.8 GB
+- Inference throughput: comparable to or faster than FP16
+- Robustness under controlled corruption
 
-The author is open to discussions with commercial or industrial partners regarding licensing, assignment, or acquisition of the associated intellectual property, particularly in contexts involving:
-
-
-
-\- large-scale model storage  
-
-\- vector databases and similarity search  
-
-\- edge deployment  
-
-\- memory- or bandwidth-constrained systems  
-
-
-
-\*\*Contact:\*\* dtdr@multiverse1.com  
-
-\*(please reference “DTDR” in correspondence)\*
-
-
+See **Experiment 01** for details.
 
 ---
 
+### 2. End-to-End ANN Search Entirely in the DTDR Domain
 
+DTDR can act as a **unified numerical domain** for approximate nearest-neighbour search.
 
-\## License
+In **Experiment 02**, we demonstrate an end-to-end ANN pipeline operating *entirely* on DTDR
+vectors, integrating:
 
+- IVF (inverted file indexing)
+- HNSW (graph-based ANN traversal)
+- Binary distance estimation (RaBitQ-like)
+- A DTDR-specific multi-resolution “dilution evidence” signal for coarse localisation
 
+No full-precision reconstruction is required at any stage.
 
-This repository is licensed under the   \*\*Creative Commons Attribution–NonCommercial 4.0 International (CC BY-NC 4.0)\*\* license.
+#### Representative results (50k vectors, CPU, Python):
 
+| Configuration | Recall@10 | Mean query time |
+|--------------|-----------|-----------------|
+| DTDR-IVF-HNSW-Binary (`nprobe=4`) | 0.63 | 2.9 ms |
+| **+ DTDR dilution evidence (`nprobe=4`)** | **0.78** | **3.1 ms** |
+| DTDR-IVF-HNSW-Binary (`nprobe=8`) | 0.80 | 4.9 ms |
 
+DTDR dilution evidence recovers ~15 percentage points of absolute recall in the low-`nprobe`
+regime, approaching the recall of a higher-cost baseline with substantially lower latency.
 
-Research, technical evaluation, internal testing, and non-commercial experimentation — including modification for evaluation purposes — are permitted.
+This behaviour is smooth, interpretable, and consistent with established ANN theory.
 
+---
 
+## Why This Is Not Just Compression
 
-Commercial use requires separate licensing.
+DTDR differs fundamentally from conventional codecs:
 
+- It is **not optimised for reconstruction fidelity alone**
+- It preserves **computational semantics**
+- It supports **direct similarity, traversal, and inference**
+- It exposes additional signals (e.g. multi-resolution persistence) that do not exist in
+  standard representations
 
+DTDR should be viewed as a **numerical representation**, not a storage format.
 
-See \[LICENSE](LICENSE) and \[LICENSE\_NOTICE.md](LICENSE\_NOTICE.md) for details.
+---
 
+## Repository Structure
 
-
-
-
-
-
+```text
+experiments/
+├── 01_model_inference/
+│   └── DTDR-compressed model inference benchmarks
+└── 02_dtdr_end_to_end_search/
+    └── End-to-end ANN search entirely in the DTDR domain
