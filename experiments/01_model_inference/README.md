@@ -34,6 +34,9 @@ These observations are consistent with a representation that preserves computati
 
 ## Execution Context
 
+Inference is performed on reconstructed FP16 weights loaded into the
+standard Hugging Face model architecture.
+
 - Execution device: CPU  
 - Environment: Python virtual environment (`.venv`)
 - Script: `DTDR_inference_demo.py`
