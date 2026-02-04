@@ -44,7 +44,7 @@ This experiment tests whether DTDR can act as a **unified numerical domain** sup
 All steps below operate on DTDR vectors only.
 
 1. **DTDR Transform**  
-   Input vectors are transformed using an orthogonal Walsh–Hadamard transform and L2-normalised.
+   Input vectors are transformed using an orthogonal Walsh–Hadamard transform, L2-normalised, and stored in DTDR form.
 
 2. **DTDR-Native IVF Construction**  
    - k-means clustering is performed directly in DTDR space.
