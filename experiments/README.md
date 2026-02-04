@@ -13,7 +13,7 @@ The files in this directory are intended to be read in the order suggested below
 
 ## Primary Demonstration
 
-The script:
+The script: DTDR_RAG_double_transform_demo.py
 
 
 located in this directory provides an end-to-end demonstration of DTDR as a
