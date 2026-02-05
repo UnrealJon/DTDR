@@ -136,7 +136,9 @@ DTDR should therefore be viewed as a **numerical representation**, not a storage
 experiments/
 ├── 01_model_inference/
 ├── 02_dtdr_end_to_end_search/
-└── storage_accounting/
+├── 03_embedding_search
+├── 04_graceful_degradation
+└── 05_storage_accounting/
 
 ---
 
@@ -154,4 +156,5 @@ Contact: dtdr@multiverse1.com
 
 See LICENSE-NOTICE.md  https://github.com/UnrealJon/DTDR/blob/main/LICENSE_NOTICE.md
  for evaluation terms.
+
 
