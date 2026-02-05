@@ -68,6 +68,55 @@ See: `experiments/02_dtdr_end_to_end_search/README.md`
 
 ---
 
+### Experiment 03 — Embedding Similarity Search in the DTDR Domain
+
+**Location:** `experiments/03_embedding_search/`
+
+Demonstrates similarity search over embedding vectors represented and queried
+directly in the DTDR domain.
+
+Focus:
+- DTDR representations of embedding spaces
+- cosine / similarity preservation under transform
+- functional equivalence of DTDR-domain search results
+
+See: `experiments/03_embedding_search/README.md`
+
+---
+
+### Experiment 04 — Graceful Degradation Under Perturbation
+
+**Location:** `experiments/04_graceful_degradation/`
+
+Explores the behaviour of DTDR representations under controlled perturbation,
+corruption, or partial loss of transform-domain coefficients.
+
+Focus:
+- robustness to noise and partial data loss
+- smooth degradation of functional behaviour
+- contrast with localised or brittle representations
+
+See: `experiments/04_graceful_degradation/README.md`
+
+---
+
+### Experiment 05 — Storage Accounting and Residual Compressibility
+
+**Location:** `experiments/05_storage_accounting/`
+
+Provides transparent accounting of DTDR persistent storage footprint relative
+to conventional floating-point and quantised formats, including analysis of
+residual lossless compressibility.
+
+Focus:
+- DTDR persistent storage size
+- optional secondary lossless compression (ZIP)
+- distinction between structured representations and terminal encodings
+
+See: `experiments/05_storage_accounting/README.md`
+
+---
+
 ## Conceptual Ordering
 
 The experiments are ordered deliberately:
@@ -81,5 +130,11 @@ The experiments are ordered deliberately:
 3. **Experiment 02**  
    Demonstrates the consequences of treating DTDR as a primary computational domain,
    including new ANN search strategies and signals.
+
+4. **Experiments 03 & 04**  
+   Explore functional behaviour in embedding spaces and robustness under perturbation.
+
+5. **Experiment 05**  
+   Quantifies persistent storage characteristics and residual structure.
 
 Additional experiments may be added in future as the framework evolves.
