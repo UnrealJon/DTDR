@@ -151,3 +151,4 @@ Baseline:
 
 ```powershell
 python experiment02_dtdr_ivf_hnsw_rabitq.py --n 50000 --q 200 --d 256 --nlist 256 --nprobe 8
+python nprobe4.py --n 50000 --q 200 --d 256 --nlist 256 --nprobe 4

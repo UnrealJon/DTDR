@@ -39,7 +39,7 @@ standard Hugging Face model architecture.
 
 - Execution device: CPU  
 - Environment: Python virtual environment (`.venv`)
-- Script: `mistral7b_reconstruction_inference.py`
+- Script: `DTDR_inference_demo.py`
 
 This experiment evaluates **functional equivalence**, not inference throughput. Performance benchmarking and GPU execution are addressed separately.
 
@@ -56,4 +56,3 @@ This experiment evaluates **functional equivalence**, not inference throughput. 
 ## Conclusion
 
 This experiment demonstrates that DTDR enables persistent storage of numerical model parameters while allowing reconstruction to a numerically different but functionally equivalent representation. The results support the claim that DTDR preserves computational functionality and exhibits robustness consistent with a distributed representation.
-

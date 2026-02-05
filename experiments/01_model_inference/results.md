@@ -9,7 +9,7 @@ reconstructed to a *numerically different but functionally equivalent*
 working precision suitable for inference.
 
 The results reported here correspond to execution of
-`mistral7b_reconstruction_inference.py` using a DTDR-INT8 persistent representation and
+`DTDR_inference_demo.py` using a DTDR-INT8 persistent representation and
 a floating-point baseline.
 
 ---
@@ -79,7 +79,6 @@ Persistent storage accounting is documented separately in
 This results summary focuses on **functional equivalence and robustness**.
 Inference throughput, GPU execution, and system-level performance are
 addressed in separate experiments and demonstrations.
-
 
 
 
