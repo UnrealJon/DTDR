@@ -68,6 +68,25 @@ The substantial residual compressibility of DTDR representations indicates
 retained global structure in the transform domain, consistent with DTDR being
 a **structured computational representation**, rather than a terminal encoding.
 
+---
+
+### Storage Robustness Under On-Disk Corruption
+
+In addition to ANN performance, we evaluated DTDR as a *storage representation* under random on-disk corruption.
+
+Using identical random byte corruption applied to:
+- FP16 safetensors (baseline)
+- DTDR Hadamard-transformed artefacts
+
+we measured reconstruction fidelity via cosine similarity and relative L2 error.
+
+**Result:**  
+FP16 exhibits catastrophic failure beyond extremely small corruption levels, driven by exponent corruption and extreme-value amplification.  
+DTDR degrades *smoothly and statistically*, preserving numerical validity over orders of magnitude greater corruption.
+
+This demonstrates DTDR’s ability to convert storage faults from hard failures into graceful degradation.
+
+See: `experiments/dtdr_disk_corruption/`
 
 ---
 
@@ -136,9 +155,7 @@ DTDR should therefore be viewed as a **numerical representation**, not a storage
 experiments/
 ├── 01_model_inference/
 ├── 02_dtdr_end_to_end_search/
-├── 03_embedding_search
-├── 04_graceful_degradation
-└── 05_storage_accounting/
+└── storage_accounting/
 
 ---
 
@@ -156,5 +173,4 @@ Contact: dtdr@multiverse1.com
 
 See LICENSE-NOTICE.md  https://github.com/UnrealJon/DTDR/blob/main/LICENSE_NOTICE.md
  for evaluation terms.
-
 
