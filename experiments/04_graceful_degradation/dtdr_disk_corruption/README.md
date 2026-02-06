@@ -128,5 +128,6 @@ These modes are intentionally distinguished.
 
 ## 8. Results Summary
 
-Quantitative results are provided in:
+Quantitative results are provided in: RESULTS
+
 
