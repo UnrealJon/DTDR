@@ -39,3 +39,29 @@ write a CSV file containing the results:
 
 dtdr\_corruption\_sweep.csv
 
+
+
+\### Disk Corruption Robustness
+
+
+
+The subfolder `dtdr\_disk\_corruption/` contains a storage-level robustness study
+
+examining the effect of random on-disk corruption on FP16 versus DTDR model
+
+representations.
+
+
+
+This experiment demonstrates that DTDR degrades smoothly under corruption,
+
+whereas FP16 exhibits catastrophic numerical failure at extremely small
+
+corruption fractions.
+
+
+
+See `dtdr\_disk\_corruption/README.md` and `RESULTS.md` for details.
+
+
+
