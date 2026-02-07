@@ -1,13 +1,6 @@
 # DTDR  Distributed Transform-Domain Representation
 
-DTDR is a method for representing numerical data, including machine-learning model parameters
-and vector embeddings, in a **distributed transform domain** that preserves computational
-functionality while reducing memory footprint and bandwidth pressure. It has been designed as a persistent transform-domain representation, with an associated on-disk file format for storing such data, and in many cases offers advantages over conventional floating-point representations.
-
-Unlike conventional compression, DTDR maintains a **compute-capable representation**:
-inference, similarity search, and approximate nearest-neighbour (ANN) traversal can be performed
-*directly in the transformed domain*, without reconstructing full-precision data.
-
+DTDR is a method for representing numerical data, including machine-learning model parameters and vector embeddings, in a distributed transform domain that preserves computational functionality while reducing memory footprint and bandwidth pressure. It has been designed as a persistent transform-domain representation, with an associated on-disk file format for storing such data, and in many cases offers advantages over conventional floating-point representations. For example, unlike conventional compression, DTDR maintains a compute-capable representation: inference, similarity search, and approximate nearest-neighbour (ANN) traversal can be performed directly in the transformed domain, without reconstructing full-precision data.
 This repository contains **reference implementations and experiments** demonstrating these properties.
 
 ---
