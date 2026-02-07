@@ -1,7 +1,7 @@
-# DTDR — Distributed Transform-Domain Representation
+# DTDR  Distributed Transform-Domain Representation
 
-DTDR is a method for representing numerical data — including machine-learning model parameters
-and vector embeddings — in a **distributed transform domain** that preserves computational
+DTDR is a method for representing numerical data, including machine-learning model parameters
+and vector embeddings, in a **distributed transform domain** that preserves computational
 functionality while reducing memory footprint and bandwidth pressure.
 
 Unlike conventional compression, DTDR maintains a **compute-capable representation**:
