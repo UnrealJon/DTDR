@@ -1,31 +1,47 @@
 # DTDR Experiments
 
-This directory contains a set of **focused, claim-aligned experiments and demonstrations**
-illustrating the properties and capabilities of the Distributed Transform-Domain Representation (DTDR).
+This directory contains a curated set of **claim-aligned, runnable experiments**
+demonstrating the properties of the **Distributed Transform-Domain Representation (DTDR)**.
 
-Each numbered subdirectory contains:
-- a runnable reference implementation, and
-- a self-contained README describing purpose, methodology, and results.
+DTDR is treated throughout as a **persistent, on-disk numerical representation**
+that remains *compute-capable*: inference, similarity search, and approximate
+nearest-neighbour (ANN) traversal can be performed directly in the transform domain,
+without reconstructing full-precision floating-point data.
 
-The files in this directory are intended to be read in the order suggested below.
+Each experiment is self-contained and accompanied by a focused README describing:
+- purpose and hypothesis,
+- methodology,
+- and key results.
+
+Readers are encouraged to begin with the **Primary Demonstration** below.
 
 ---
 
-## Primary Demonstration
+## Primary Demonstration (Start Here)
 
-The script: DTDR_RAG_double_transform_demo.py
+### DTDR RAG Demo with Composite Transforms
 
+**File:** `DTDR_RAG_double_transform_demo.ipynb`  
+**Location:** this directory
 
-located in this directory provides an end-to-end demonstration of DTDR as a
-**functional numerical representation**, integrating:
+This notebook provides a **fully self-contained, human-verifiable demonstration**
+of DTDR behaviour using retrieval-style (RAG-like) similarity search over
+public-domain texts (*Alice in Wonderland*, *Sherlock Holmes*).
 
-- composite (double) DTDR constructions,
-- direct similarity search in the transform domain,
-- retrieval-style (RAG-like) workflows.
+It demonstrates:
 
-This script is intended as a **conceptual and functional demonstration**, rather than a
-benchmarked experiment. Readers looking for a single, self-contained illustration of
-DTDR behaviour may wish to begin here before exploring the numbered experiments below.
+- DTDR as a **persistent, compute-capable file representation**
+- direct similarity computation in the DTDR domain
+- single and composite DTDR constructions (Hadamard, Hadamard + DCT)
+- graceful degradation of retrieval quality under simulated corruption
+- comparison against a no-transform INT8 baseline
+
+The notebook:
+- downloads required data automatically,
+- runs end-to-end in a clean Python environment,
+- produces both tabular results and degradation plots.
+
+This is the recommended **first point of contact** for understanding DTDR.
 
 ---
 
@@ -33,108 +49,114 @@ DTDR behaviour may wish to begin here before exploring the numbered experiments 
 
 ### Experiment 01 — Functional Reconstruction of a DTDR-Stored Model
 
-**Location:** `experiments/01_model_inference/`
+**Location:** `01_model_inference/`
 
-Demonstrates that a numerical model stored in DTDR form can be reconstructed to a
-numerically different but **functionally equivalent** representation suitable for inference.
+Demonstrates that a numerical model stored persistently in DTDR form can be
+reconstructed to a numerically different but **functionally equivalent**
+representation suitable for inference.
 
 Focus:
-- DTDR as a *persistent stored representation*
-- functional equivalence versus reconstruction fidelity
+- DTDR as a persistent on-disk representation
+- functional equivalence vs numerical fidelity
 - robustness under controlled coefficient perturbation
 
-See: `experiments/01_model_inference/README.md`
+See: `01_model_inference/README.md`
 
 ---
 
 ### Experiment 02 — End-to-End ANN Search in the DTDR Domain
 
-**Location:** `experiments/02_dtdr_end_to_end_search/`
+**Location:** `02_dtdr_end_to_end_search/`
 
-Demonstrates an end-to-end approximate nearest-neighbour (ANN) search pipeline
-operating *entirely* in the DTDR domain, integrating:
+Demonstrates a complete approximate nearest-neighbour (ANN) pipeline operating
+*entirely* in the DTDR domain, integrating:
 
 - IVF (inverted file indexing),
 - HNSW graph traversal,
 - binary distance estimation (RaBitQ-like),
-- DTDR-specific multi-resolution dilution evidence for coarse localisation.
+- DTDR-specific **multi-resolution dilution evidence** for coarse localisation.
 
 Focus:
 - DTDR as a native computational domain
-- ANN recall/latency trade-offs
-- novel localisation signals enabled by distributed representations
+- recall / latency trade-offs
+- novel ANN signals enabled by distributed representations
 
-See: `experiments/02_dtdr_end_to_end_search/README.md`
+See: `02_dtdr_end_to_end_search/README.md`
 
 ---
 
 ### Experiment 03 — Embedding Similarity Search in the DTDR Domain
 
-**Location:** `experiments/03_embedding_search/`
+**Location:** `03_embedding_search/`
 
-Demonstrates similarity search over embedding vectors represented and queried
-directly in the DTDR domain.
+Demonstrates similarity search over embedding vectors represented, stored,
+and queried directly in the DTDR domain.
 
 Focus:
 - DTDR representations of embedding spaces
-- cosine / similarity preservation under transform
+- similarity preservation under orthogonal transforms
 - functional equivalence of DTDR-domain search results
 
-See: `experiments/03_embedding_search/README.md`
+See: `03_embedding_search/README.md`
 
 ---
 
 ### Experiment 04 — Graceful Degradation Under Perturbation
 
-**Location:** `experiments/04_graceful_degradation/`
+**Location:** `04_graceful_degradation/`
 
-Explores the behaviour of DTDR representations under controlled perturbation,
-corruption, or partial loss of transform-domain coefficients.
+Explores DTDR behaviour under controlled perturbation, partial coefficient loss,
+and on-disk corruption.
+
+Includes:
+- coefficient dropout experiments,
+- block-loss simulations,
+- file-on-disk corruption sweeps (DTDR vs FP16).
 
 Focus:
-- robustness to noise and partial data loss
-- smooth degradation of functional behaviour
-- contrast with localised or brittle representations
+- robustness to partial data loss
+- smooth degradation vs catastrophic failure
+- contrast with localised floating-point representations
 
-See: `experiments/04_graceful_degradation/README.md`
+See: `04_graceful_degradation/README.md`
 
 ---
 
 ### Experiment 05 — Storage Accounting and Residual Compressibility
 
-**Location:** `experiments/05_storage_accounting/`
+**Location:** `05_storage_accounting/`
 
-Provides transparent accounting of DTDR persistent storage footprint relative
-to conventional floating-point and quantised formats, including analysis of
-residual lossless compressibility.
+Provides transparent accounting of DTDR persistent storage footprint relative to
+conventional floating-point and quantised formats.
+
+Includes analysis of **residual lossless compressibility** (e.g. ZIP), highlighting
+structural differences between DTDR representations and terminal encodings
+such as GGUF.
 
 Focus:
-- DTDR persistent storage size
-- optional secondary lossless compression (ZIP)
-- distinction between structured representations and terminal encodings
+- DTDR storage size
+- secondary lossless compression potential
+- evidence that DTDR is not entropy-saturated compression
 
-See: `experiments/05_storage_accounting/README.md`
+See: `05_storage_accounting/README.md`
 
 ---
 
-## Conceptual Ordering
-
-The experiments are ordered deliberately:
+## Suggested Reading Order
 
 1. **Primary Demonstration**  
-   Introduces DTDR as a functional and composable numerical representation.
+   Concrete, human-verifiable illustration of DTDR behaviour.
 
 2. **Experiment 01**  
-   Establishes DTDR as a persistent representation that preserves computational functionality.
+   Establishes DTDR as a persistent representation that preserves computation.
 
 3. **Experiment 02**  
-   Demonstrates the consequences of treating DTDR as a primary computational domain,
-   including new ANN search strategies and signals.
+   Shows consequences of treating DTDR as a primary computational domain.
 
 4. **Experiments 03 & 04**  
-   Explore functional behaviour in embedding spaces and robustness under perturbation.
+   Explore similarity search and robustness under degradation.
 
 5. **Experiment 05**  
-   Quantifies persistent storage characteristics and residual structure.
+   Quantifies storage characteristics and residual structure.
 
-Additional experiments may be added in future as the framework evolves.
+Additional experiments may be added as the framework evolves.
