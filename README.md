@@ -20,7 +20,7 @@ This repository contains **reference implementations and experiments** demonstra
 - **Graceful degradation** under quantisation *and* on-disk corruption  
 - **Substantial residual lossless compression** (ZIP), indicating retained structure  
 
-DTDR is not a codec — it is a **numerical representation**.
+DTDR is not a codec: it is a **numerical representation**.
 
 ---
 
