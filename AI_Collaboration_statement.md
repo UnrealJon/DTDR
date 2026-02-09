@@ -21,7 +21,7 @@ It also helps that the content and projects on which I have worked allow for val
 
 ## My Role and Responsibility
 
-In summary, I have used AI as a responsive interlocutor — to explore formulations, test arguments, and sharpen clarity — while I provide original ideas and intuitions, set the direction, apply constraints, make corrections, and take responsibility for what survived. My background in reproductive medicine, neural systems, and machine learning implementation provides the domain expertise that guided these collaborations.
+In summary, I have used AI as a responsive interlocutor — to explore formulations, test arguments, and sharpen clarity — while I provide original ideas and intuitions, set the direction, apply constraints, make corrections, and take responsibility for what survived. My background spans medical science and clinical medicine, with longstanding interests in computer programming and the applications of computers in medicine. Self-directed study in machine learning and practical implementation experience provide the cross-disciplinary perspective that guided these collaborations.
 
 I've deliberately left the cues of collaboration visible because removing them would give a false impression of how the work was done.
 
