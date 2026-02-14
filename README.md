@@ -107,6 +107,37 @@ This provides a coarse localisation signal that is:
 - unavailable in localised representations.
 
 ---
+## A structural property: routing vs search
+
+Most vector search systems scale by searching more of the database.
+
+DTDR-based retrieval behaves differently.
+
+In our end-to-end ANN experiments we repeatedly observe:
+
+> The number of partitions that must be searched remains approximately constant as dataset size grows.
+
+Accuracy is instead controlled by *local refinement* within the routed partitions.
+
+This converts nearest-neighbour retrieval from a global exploration problem into a local ranking problem.
+
+We isolate this behaviour in a minimal reproducible experiment:
+
+➡️ **[Routing vs Local Refinement experiment](end_to_end_ann_search/routing_vs_local_refinement/README.md)**
+
+The experiment shows:
+
+| Dataset size | Partitions searched |
+|------------|----------------|
+| 50k | ~2 |
+| 200k | ~2 |
+| 500k | ~2 |
+
+while recall increases only with local candidate depth.
+
+This behaviour is unusual for ANN systems and has potential implications for large-scale search infrastructure, where cross-partition fan-out dominates latency and energy cost.
+
+---
 
 ## Why DTDR Is Not Just Compression
 
