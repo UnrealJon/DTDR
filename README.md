@@ -123,7 +123,7 @@ This converts nearest-neighbour retrieval from a global exploration problem into
 
 We isolate this behaviour in a minimal reproducible experiment:
 
-➡️ **[Routing vs Local Refinement experiment](end_to_end_ann_search/routing_vs_local_refinement/README.md)**
+➡️ [**[Routing vs Local Refinement experiment](end_to_end_ann_search/routing_vs_local_refinement/README.md)**](https://github.com/UnrealJon/DTDR/blob/main/experiments/02_dtdr_end_to_end_search/routing_vs_local_refinement/README.md)
 
 The experiment shows:
 
@@ -179,5 +179,6 @@ This repository is provided for research and evaluation purposes.
 For commercial licensing, strategic partnerships, or IP inquiries:
 
 Contact: dtdr@multiverse1.com
+
 
 See LICENSE_NOTICE.md for evaluation terms.
