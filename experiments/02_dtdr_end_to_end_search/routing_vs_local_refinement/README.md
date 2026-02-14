@@ -1,36 +1,49 @@
+# DTDR Routing vs Local Refinement Experiment
+
+This experiment demonstrates a structural property of DTDR-based similarity search:
+
+> Retrieval cost becomes dominated by *local refinement* rather than *global search*.
+
+In conventional ANN systems, improving recall requires searching more partitions as the dataset grows.
+
+In the DTDR routing pipeline:
+
+• The number of partitions probed remains approximately constant  
+• Accuracy improves only by increasing local candidate evaluation inside those partitions  
+
+This converts nearest-neighbour search from a **global exploration problem** into a **local ranking problem**.
 
 ---
 
-## 2) RESULTS.md (interpretation)
+## What the script does
 
-This file explains what the numbers mean.
+`nprobe4_klocal_sweep.py`:
 
-Paste this:
+1. Generates a clustered embedding dataset
+2. Applies DTDR transform
+3. Routes queries using dilution evidence
+4. Sweeps local candidate budget (`k_local`)
+5. Measures:
 
-```markdown
-# Results Interpretation
-
-Typical output:
-
-| k_local | recall@10 | lists | candidates |
-|------|------|------|------|
-| 10 | low | 2 | small |
-| 80 | higher | 2 | medium |
-| 320 | saturates | 2 | large |
-
-Key observations:
-
-1) Partitions probed remains ~2 regardless of dataset size
-2) Increasing k_local improves recall without increasing search breadth
-3) Recall saturates → error comes from local ambiguity, not search failure
+- recall@10
+- partitions probed
+- candidates evaluated
 
 ---
 
-## Conclusion
+## Expected behaviour
 
-The experiment shows that DTDR routing collapses the ANN search problem:
+As dataset size increases:
 
-Instead of exploring more of the dataset to improve accuracy,
-the system performs deeper evaluation within a fixed region.
+| Property | Classical ANN | DTDR Routing |
+|--------|------|------|
+| Partitions probed | grows | constant |
+| Compute cost | search-dominated | local-ranking dominated |
+| Scaling | global | local |
 
-Global search complexity disappears.
+---
+
+## Run
+
+```bash
+python nprobe4_klocal_sweep.py --n 200000
