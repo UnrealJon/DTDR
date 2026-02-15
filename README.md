@@ -138,6 +138,35 @@ while recall increases only with local candidate depth.
 This behaviour is unusual for ANN systems and has potential implications for large-scale search infrastructure, where cross-partition fan-out dominates latency and energy cost.
 
 ---
+Routing reliability on real embeddings
+
+The previous experiment used synthetic clustered data to reveal the scaling behaviour.
+We therefore repeated the test using real semantic embeddings (GloVe).
+
+The goal is not to maximise recall, but to measure a production-relevant metric:
+
+Does the correct nearest neighbour survive the routing stage?
+
+In large retrieval pipelines the ANN stage acts as a candidate generator:
+
+ANN → reranker → LLM / ranking model
+
+Therefore the critical property is avoiding early discard of the correct item.
+
+Results (200k real embeddings, 2 partitions always probed):
+
+Local candidates	Hit@1 (true NN retained)
+80	85%
+160	96%
+320	100%
+
+This shows that DTDR routing does not perfectly partition semantic space, but concentrates nearest-neighbour probability into a constant number of regions.
+
+Increasing certainty requires only local computation — not broader distributed search.
+
+➡️ Routing reliability on real embeddings
+
+---
 
 ## Why DTDR Is Not Just Compression
 
