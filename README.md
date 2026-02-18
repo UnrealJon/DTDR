@@ -1,38 +1,239 @@
-# Experiment 06 — Emergence from Distributed Representation
+# DTDR — Distributed Transform-Domain Representation
 
-## Purpose
+DTDR is a method for representing numerical data — including machine-learning
+model parameters and vector embeddings — in a distributed transform domain that
+preserves *computational structure* rather than merely preserving values.
 
-This experiment investigates how inference capability appears as increasing fractions
-of DTDR coefficients are reconstructed.
+Unlike compression formats, DTDR is a persistent numerical representation:
+computation, search, and inference can operate directly on the stored form.
 
-Unlike hierarchical compression (e.g. JPEG), DTDR does not preserve meaning at low fractions.
-Instead, semantic behaviour emerges collectively once a sufficient portion of the distributed
-representation is present.
+This repository contains reference implementations and experiments demonstrating
+the properties of this representation.
 
-## What this demonstrates
+---
 
-DTDR behaves as a **globally coherent representation** rather than a coarse-to-fine approximation.
+## The Core Idea
 
-Small subsets of coefficients do not contain partial meaning.
-However, behaviour appears abruptly once enough coefficients accumulate.
+Most numerical formats store information locally:
 
-This is characteristic of distributed associative memory systems.
+> individual values contain individual meaning
 
-## Running
+DTDR stores information collectively:
 
-python progressive_emergence_demo.py --pkl compressed_mistral_7b.pkl --cache-dir ./hf_cache
+> meaning exists only in the consistency of the whole representation
+
+As a result, two independent properties appear:
+
+| Property | What survives partial information |
+|--------|------|
+Relational structure | survives |
+Functional behaviour | does not |
+
+In simple terms:
+
+> You may lose the ability to reconstruct the answer before you lose the ability to find where the answer is.
+
+The experiments in this repository demonstrate this principle repeatedly.
+
+---
+
+## TL;DR
+
+- 3–4× storage reduction for large models and embeddings
+- ANN search performed entirely in DTDR domain
+- Novel routing signal (“dilution evidence”)
+- Robust to corruption
+- Additional lossless compressibility
+- Behaviour emerges only when representation becomes globally consistent
+
+DTDR is **not a codec** — it is a computational representation.
+
+---
+
+## Key Experimental Results
+
+---
+
+### 1. Model Storage & Inference Reconstruction
+
+DTDR-compressed parameters reconstruct to a numerically working model using
+standard kernels.
+
+| Model | FP16 | DTDR-INT8 | Compression | Similarity |
+|------|------|-----------|-------------|------------|
+| Mistral-7B | ~14.5 GB | ~6.7 GB | ~2.2× | 0.9998 |
+
+Inference behaviour matches the FP baseline once reconstruction is complete.
+
+See `experiments/01_model_inference/`
+
+---
+
+### 2. Emergence of Behaviour (Critical Completeness)
+
+Partial reconstruction does **not** produce a weaker model.
+
+Instead:
+
+| Fraction present | Behaviour |
+|------|------|
+Low | no language |
+Medium | unstable fragments |
+High | sudden coherent inference |
+
+Inference appears only after sufficient global constraints exist.
+
+This shows DTDR stores behaviour as a *constraint closure* rather than a layered approximation.
+
+See `experiments/06_emergence_from_distribution/`
+
+---
+
+### 3. Graceful Degradation Under Corruption
+
+Random on-disk corruption was applied to:
+
+- FP16 safetensors
+- DTDR transformed parameters
+
+Result:
+
+FP16 → catastrophic numerical failure  
+DTDR → smooth statistical degradation
+
+DTDR redistributes error rather than concentrating it.
+
+See `experiments/04_graceful_degradation/`
+
+---
+
+### 4. End-to-End ANN Search in DTDR Domain
+
+ANN search can operate entirely within DTDR vectors without reconstruction.
+
+| Configuration | Recall@10 | Latency |
+|--------------|-----------|------|
+DTDR-IVF-HNSW | 0.63 | 2.9 ms |
++ dilution evidence | 0.78 | 3.1 ms |
+
+DTDR introduces a routing signal unavailable in conventional embeddings.
+
+See `experiments/02_dtdr_end_to_end_search/`
+
+---
+
+### 5. Routing Reliability on Real Embeddings
+
+On real GloVe embeddings:
+
+| Local candidates | True NN retained |
+|------|------|
+80 | 85% |
+160 | 96% |
+320 | 100% |
+
+The correct neighbour survives routing even when most of the database is ignored.
+
+Meaning:
+
+> Location survives before identity.
+
+---
+
+### 6. Residual Lossless Compression
+
+DTDR artefacts compress further under ZIP:
+
+| Representation | Additional reduction |
+|------|------|
+FP16 | ~0–1% |
+INT8 | ~3–4% |
+DTDR-INT8 | ~30–35% |
+
+Indicates preserved transform-domain structure.
+
+See `experiments/05_storage_accounting/`
+
+---
+
+## What “Dilution Evidence” Means
+
+DTDR distributes signal across multiple aggregation scales.
+
+By observing how similarity persists under progressive aggregation,
+the system predicts *where relevant data will be* before accessing it.
+
+This converts search from global exploration to local verification.
+
+---
+
+## The Unifying Interpretation
+
+All experiments demonstrate the same structural property:
+
+| Experiment | What remains stable |
+|------|------|
+Corruption | approximate values |
+Routing | geometric relations |
+Truncation | nothing (until closure) |
+
+DTDR behaves like a constraint system:
+
+- insufficient constraints → no function
+- sufficient constraints → stable function
+
+But relational structure exists earlier.
+
+This separates two concepts normally tied together:
+
+> identity vs similarity
+
+---
+
+## Why This Matters
+
+Traditional representations optimise reconstruction fidelity.
+
+DTDR optimises computational usefulness.
+
+This enables:
+
+- routing before reconstruction
+- search without full decoding
+- robust storage
+- progressive computation
+- large-scale retrieval efficiency
+
+DTDR should therefore be viewed as a numerical coordinate system for computation.
+
+---
+
+## Repository Structure
 
 
-Outputs:
 
-- emergence_curve.csv
-- emergence_curve.png
+```text
+experiments/
+├── 01_model_inference/
+├── 02_dtdr_end_to_end_search/
+├── 03_embedding_search/
+├── 04_graceful_degradation/
+├── 05_storage_accounting/
+├── 06_emergence_from_distribution/
 
-## Expected Result
+DTDR_RAG_double_transform_demo.ipynb
 
-An S-shaped curve:
-- near-zero similarity at low fractions
-- rapid transition
-- convergence near full reconstruction
+Patent & Commercial Licensing
 
-This shows inference is a collective property of the representation.
+DTDR is the subject of a filed UK patent application:
+
+UK Patent Application No. GB2602157.6
+
+This repository is provided for research and evaluation purposes.
+
+For commercial licensing, strategic partnerships, or IP inquiries:
+
+Contact: dtdr@multiverse1.com
+
+
+See LICENSE_NOTICE.md for evaluation terms.
