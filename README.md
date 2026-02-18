@@ -1,210 +1,277 @@
-# DTDR — Distributed Transform-Domain Representation
+# Distributed Transform-Domain Representation (DTDR)
 
-DTDR is a method for representing numerical data — including machine-learning
-model parameters and vector embeddings — in a distributed transform domain that
-preserves *computational structure* rather than merely preserving values.
+**A persistent computational memory representation for machine learning systems**
 
-Unlike compression formats, DTDR is a persistent numerical representation:
-computation, search, and inference can operate directly on the stored form.
+DTDR is a transform-domain representation of numerical models and embeddings in which information is stored *globally* rather than locally.  
+Instead of encoding parameters as individually meaningful weights, DTDR stores models as a distributed constraint system whose behaviour emerges collectively.
 
-This repository contains reference implementations and experiments demonstrating
-the properties of this representation.
+This repository contains a set of experiments demonstrating that DTDR is not a compression trick or quantisation format — but a **functional representation** with distinct computational properties.
 
 ---
 
 ## The Core Idea
 
-Most numerical formats store information locally:
+Most numerical formats store models as collections of independent parameters:
 
-> individual values contain individual meaning
+> accuracy depends on preserving individual values
 
-DTDR stores information collectively:
+DTDR stores models as a system of global constraints:
 
-> meaning exists only in the consistency of the whole representation
+> accuracy depends on preserving consistency of the whole
 
-As a result, two independent properties appear:
+Because of this, errors behave differently.
 
-| Property | What survives partial information |
-|--------|------|
-Relational structure | survives |
-Functional behaviour | does not |
+| Representation | What quantisation preserves | What error destroys |
+|---|---|---|
+| Conventional | parameter precision | function |
+| DTDR | functional consistency | fine detail |
 
-In simple terms:
+In practical terms:
 
-> You may lose the ability to reconstruct the answer before you lose the ability to find where the answer is.
+> DTDR does not minimise numerical distortion — it redirects distortion into directions that least affect behaviour.
 
-The experiments in this repository demonstrate this principle repeatedly.
+This produces a distinctive combination of effects observed throughout the experiments:
 
----
+- improved functional stability at low precision
+- graceful degradation under corruption
+- residual lossless compressibility
+- localisation without reconstruction
+- emergence only after global consistency is reached
 
-## TL;DR
-
-- 3–4× storage reduction for large models and embeddings
-- ANN search performed entirely in DTDR domain
-- Novel routing signal (“dilution evidence”)
-- Robust to corruption
-- Additional lossless compressibility
-- Behaviour emerges only when representation becomes globally consistent
-
-DTDR is **not a codec** — it is a computational representation.
+The representation therefore organises information around the model’s behaviour rather than its coefficients.
 
 ---
 
-## Key Experimental Results
+## What DTDR Is
+
+DTDR represents vectors, embeddings and neural network parameters in an orthogonal transform domain (e.g. Hadamard) followed by structured quantisation.
+
+Unlike conventional formats:
+
+| Conventional representation | DTDR |
+|---|---|
+| Parameters store features | Coefficients store constraints |
+| Damage breaks parts | Damage becomes noise |
+| Smaller model = weaker model | Partial model = no model |
+| Search explores space | Search localises then ranks |
+| Compression removes detail | Representation redistributes information |
+
+DTDR behaves more like an interference pattern than a parameter list.
 
 ---
 
-### 1. Model Storage & Inference Reconstruction
+## Core Claim
 
-DTDR-compressed parameters reconstruct to a numerically working model using
-standard kernels.
-
-| Model | FP16 | DTDR-INT8 | Compression | Similarity |
-|------|------|-----------|-------------|------------|
-| Mistral-7B | ~14.5 GB | ~6.7 GB | ~2.2× | 0.9998 |
-
-Inference behaviour matches the FP baseline once reconstruction is complete.
-
-See `experiments/01_model_inference/`
+> DTDR is a transform-domain memory representation that preserves functional behaviour, supports computation directly in the stored domain, and exhibits graceful degradation under damage while showing emergence thresholds under incompleteness.
 
 ---
 
-### 2. Emergence of Behaviour (Critical Completeness)
+## Repository Experiments
 
-Partial reconstruction does **not** produce a weaker model.
-
-Instead:
-
-| Fraction present | Behaviour |
-|------|------|
-Low | no language |
-Medium | unstable fragments |
-High | sudden coherent inference |
-
-Inference appears only after sufficient global constraints exist.
-
-This shows DTDR stores behaviour as a *constraint closure* rather than a layered approximation.
-
-See `experiments/06_emergence_from_distribution/`
+The experiments are organised as a progressive argument.
 
 ---
 
-### 3. Graceful Degradation Under Corruption
+### 1. Semantic Geometry Exists in the Transform Domain
+**Similarity search without reconstruction**
 
-Random on-disk corruption was applied to:
-
-- FP16 safetensors
-- DTDR transformed parameters
+DTDR embeddings can be compared directly in quantised transform space while preserving similarity ordering.
 
 Result:
-
-FP16 → catastrophic numerical failure  
-DTDR → smooth statistical degradation
-
-DTDR redistributes error rather than concentrating it.
-
-See `experiments/04_graceful_degradation/`
-
----
-
-### 4. End-to-End ANN Search in DTDR Domain
-
-ANN search can operate entirely within DTDR vectors without reconstruction.
-
-| Configuration | Recall@10 | Latency |
-|--------------|-----------|------|
-DTDR-IVF-HNSW | 0.63 | 2.9 ms |
-+ dilution evidence | 0.78 | 3.1 ms |
-
-DTDR introduces a routing signal unavailable in conventional embeddings.
-
-See `experiments/02_dtdr_end_to_end_search/`
-
----
-
-### 5. Routing Reliability on Real Embeddings
-
-On real GloVe embeddings:
-
-| Local candidates | True NN retained |
-|------|------|
-80 | 85% |
-160 | 96% |
-320 | 100% |
-
-The correct neighbour survives routing even when most of the database is ignored.
+- Retrieval quality comparable to floating point
+- No decompression required
+- Works for RAG-style pipelines
 
 Meaning:
-
-> Location survives before identity.
-
----
-
-### 6. Residual Lossless Compression
-
-DTDR artefacts compress further under ZIP:
-
-| Representation | Additional reduction |
-|------|------|
-FP16 | ~0–1% |
-INT8 | ~3–4% |
-DTDR-INT8 | ~30–35% |
-
-Indicates preserved transform-domain structure.
-
-See `experiments/05_storage_accounting/`
+> DTDR preserves semantic geometry, not just numbers.
 
 ---
 
-## What “Dilution Evidence” Means
+### 2. Neural Networks Still Function
+**Functional reconstruction of a large language model**
 
-DTDR distributes signal across multiple aggregation scales.
+A Mistral-7B model stored in DTDR form reconstructs into a numerically different but functionally equivalent working model.
 
-By observing how similarity persists under progressive aggregation,
-the system predicts *where relevant data will be* before accessing it.
+Observed:
+- Nearly identical outputs
+- Smooth degradation under perturbation
 
-This converts search from global exploration to local verification.
+Meaning:
+> DTDR stores model behaviour rather than exact parameters.
 
 ---
 
-## The Unifying Interpretation
+### 3. Algorithms Operate Inside DTDR
+**ANN search performed entirely in transform space**
 
-All experiments demonstrate the same structural property:
+Vector search pipelines operate directly on DTDR representations.
 
-| Experiment | What remains stable |
-|------|------|
-Corruption | approximate values |
-Routing | geometric relations |
-Truncation | nothing (until closure) |
+Observed:
+- No reconstruction required
+- Stable nearest-neighbour behaviour
 
-DTDR behaves like a constraint system:
+Meaning:
+> DTDR is a computational domain, not just a storage format.
 
-- insufficient constraints → no function
-- sufficient constraints → stable function
+---
 
-But relational structure exists earlier.
+### 4. Search Scaling Changes
+**Routing vs global exploration**
 
-This separates two concepts normally tied together:
+DTDR routing keeps the number of searched partitions constant while improving recall through local refinement.
 
-> identity vs similarity
+Conventional ANN:
+```
+more data → search more machines
+```
+
+DTDR:
+```
+more certainty → more local compute
+```
+
+Meaning:
+> DTDR turns search into localisation.
+
+---
+
+### 5. Real Embeddings Confirm the Behaviour
+**GloVe routing experiment**
+
+On real semantic embeddings:
+
+- constant shard fan-out
+- increasing hit rate via local refinement
+
+Implication:
+> Reduced cross-node traffic and tail latency risk.
+
+---
+
+### 6. Robustness to Damage
+**Graceful degradation under corruption**
+
+Random corruption of stored DTDR parameters produces proportional output degradation instead of catastrophic failure.
+
+Interpretation:
+> Information is distributed across coefficients.
+
+---
+
+### 7. Robustness on Disk
+**LLM checkpoint corruption study**
+
+Compared with FP16 storage:
+
+- FP16 fails at extremely low corruption
+- DTDR remains numerically stable across orders of magnitude more damage
+
+Meaning:
+> DTDR converts storage failure into noise.
+
+---
+
+### 8. Persistent Storage Behaviour
+**Storage accounting**
+
+Mistral-7B example:
+
+| Representation | Size |
+|---|---|
+| FP16 | ~14.5 GB |
+| INT8-DTDR | ~6.8 GB |
+
+Additionally:
+- DTDR remains losslessly compressible (~30–35% extra reduction)
+
+Meaning:
+> DTDR is structured memory, not entropy-saturated encoding.
+
+---
+
+### 9. Emergence vs Degradation (Key Result)
+**Partial model reconstruction experiment**
+
+Two opposite tests:
+
+| Condition | Behaviour |
+|---|---|
+| Corruption | Smooth degradation |
+| Truncation | Sudden appearance of language |
+
+Observation:
+- < ~60% coefficients → no coherent language
+- > ~80% → rapid stabilisation
+
+Interpretation:
+> The model exists only when global constraints close.
+
+This explains all previous properties.
+
+---
+
+## Conceptual Interpretation
+
+DTDR behaves like triangulation:
+
+- Move satellites → position drifts (graceful degradation)
+- Remove satellites → no position exists (emergence threshold)
+
+Therefore:
+
+> A neural network stored in DTDR is a solved system, not a parameter list.
 
 ---
 
 ## Why This Matters
 
-Traditional representations optimise reconstruction fidelity.
+DTDR changes assumptions in several fields:
 
-DTDR optimises computational usefulness.
+### Machine Learning Systems
+- distributed retrieval routing
+- resilient model storage
+- fault-tolerant inference
 
-This enables:
+### Databases & Vector Search
+- reduced fan-out
+- controllable latency vs compute tradeoff
+- localisation instead of exploration
 
-- routing before reconstruction
-- search without full decoding
-- robust storage
-- progressive computation
-- large-scale retrieval efficiency
+### Model Distribution
+- partial downloads become meaningful
+- corruption becomes tolerable
+- checkpoints become transportable
 
-DTDR should therefore be viewed as a numerical coordinate system for computation.
+---
+
+## Summary
+
+DTDR simultaneously exhibits:
+
+- semantic similarity preservation
+- functional reconstruction
+- computation in compressed space
+- different ANN scaling laws
+- graceful degradation
+- emergence thresholds
+- residual compressibility
+
+No conventional compression or quantisation scheme shows this combination.
+
+---
+
+## Takeaway
+
+DTDR suggests neural networks are not best understood as weighted graphs but as **global constraint systems** whose behaviour emerges when sufficient information is present.
+
+---
+
+## Status
+
+Research prototype and experimental demonstration.
+
+The repository is intended to document observed properties and encourage independent verification, criticism and theoretical interpretation.
+
 
 ---
 
