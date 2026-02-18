@@ -73,6 +73,29 @@ See:
 
 ---
 
+## Clarification: Corruption vs Incompleteness
+
+DTDR distributes information across coefficients rather than storing it in isolated parameters.  
+Because of this, different types of data damage produce qualitatively different behaviour.
+
+| Condition | Observed behaviour |
+|--------|------|
+| Bit corruption / noise | Smooth degradation of results |
+| Missing or truncated data | Behaviour absent until sufficient data present |
+| Sufficient data restored | Rapid stabilisation of function |
+
+In practical terms:
+
+> DTDR is tolerant to *damage* but dependent on *completeness*.
+
+This differs from conventional parameter storage, where losing part of a file typically produces a smaller but still functioning model.  
+In DTDR, behaviour emerges once enough global constraints are available — similar to triangulation, where position does not exist until enough reference points are present.
+
+This explains why DTDR simultaneously exhibits graceful degradation under corruption while also showing a sharp functional threshold under truncation.
+
+
+---
+
 ### End-to-End ANN Search (DTDR Domain)
 
 DTDR can act as a **unified numerical domain** for ANN pipelines.
