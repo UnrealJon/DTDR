@@ -1,239 +1,193 @@
-Distributed Transform-Domain Representation (DTDR)
+# DTDR — Distributed Transform-Domain Representation
 
-A persistent computational memory representation for machine learning systems
+DTDR is a computational memory architecture.
+It maintains high-dimensional data in quantised transform-domain form
+as the **primary working representation**, not as a compressed archive
+that must be decompressed before use.
 
-DTDR is a transform-domain representation of numerical models and embeddings in which information is stored globally rather than locally.
-Instead of encoding parameters as individually meaningful weights, DTDR stores models as a distributed constraint system whose behaviour emerges collectively.
+This distinction matters. Conventional compression reduces storage cost
+but adds a decode step before every operation. DTDR eliminates that step:
+computation happens directly on the stored form.
 
-This repository contains a set of experiments demonstrating that DTDR is not a compression trick or quantisation format — but a functional representation with distinct computational properties.
-
-The Core Idea
-
-Most numerical formats store models as collections of independent parameters:
-
-accuracy depends on preserving individual values
-
-DTDR stores models as a system of global constraints:
-
-accuracy depends on preserving consistency of the whole
-
-Because of this, errors behave differently.
-
-Representation	What quantisation preserves	What error destroys
-Conventional	parameter precision	function
-DTDR	functional consistency	fine detail
-
-In practical terms:
-
-DTDR does not minimise numerical distortion — it redirects distortion into directions that least affect behaviour.
-
-This produces a distinctive combination of effects observed throughout the experiments:
-
-improved functional stability at low precision
-
-graceful degradation under corruption
-
-residual lossless compressibility
-
-localisation without reconstruction
-
-emergence only after global consistency is reached
-
-The representation therefore organises information around the model’s behaviour rather than its coefficients.
-
-What DTDR Is
-
-DTDR represents vectors, embeddings and neural network parameters in an orthogonal transform domain (e.g. Hadamard) followed by structured quantisation.
-
-Unlike conventional formats:
-
-Conventional representation	DTDR
-Parameters store features	Coefficients store constraints
-Damage breaks parts	Damage becomes noise
-Smaller model = weaker model	Partial model = no model
-Search explores space	Search localises then ranks
-Compression removes detail	Representation redistributes information
-
-DTDR behaves more like an interference pattern than a parameter list.
-
-Core Claim
-
-DTDR is a transform-domain memory representation that preserves functional behaviour, supports computation directly in the stored domain, and exhibits graceful degradation under damage while showing emergence thresholds under incompleteness.
-
-Repository Experiments
-
-The experiments are organised as a progressive argument.
-
-1. Semantic Geometry Exists in the Transform Domain
-
-DTDR embeddings can be compared directly in quantised transform space while preserving similarity ordering.
-
-Result:
-
-Retrieval quality comparable to floating point
-
-No decompression required
-
-Meaning:
-
-DTDR preserves semantic geometry, not just numbers.
-
-2. Neural Networks Still Function
-
-A Mistral-7B model stored in DTDR form reconstructs into a numerically different but functionally equivalent working model.
-
-Meaning:
-
-DTDR stores model behaviour rather than exact parameters.
-
-3. Algorithms Operate Inside DTDR
-
-Vector search pipelines operate directly on DTDR representations.
-
-Meaning:
-
-DTDR is a computational domain, not just a storage format.
-
-4. Search Scaling Changes
-
-DTDR routing keeps the number of searched partitions constant while improving recall through local refinement.
-
-Conventional ANN:
-
-more data → search more machines
-
-
-DTDR:
-
-more certainty → more local compute
-
-
-Observed (end-to-end ANN search):
-
-Baseline IVF-HNSW (nprobe=4):   recall@10 = 0.6285   latency ≈ 2.87 ms
-With DTDR dilution evidence:    recall@10 = 0.7760   latency ≈ 3.10 ms
-
-
-~15% absolute recall gain at nearly identical latency, approaching the cost of doubling probes.
-
-Meaning:
-
-DTDR turns search into localisation.
-
-5. Real Embeddings Confirm the Behaviour
-
-On real semantic embeddings:
-
-constant shard fan-out
-
-increasing hit rate via local refinement
-
-Implication:
-
-Reduced cross-node traffic and tail latency risk.
-
-6. Robustness to Damage
-
-Random corruption of stored DTDR parameters produces proportional output degradation instead of catastrophic failure.
-
-Interpretation:
-
-Information is distributed across coefficients.
-
-7. Robustness on Disk
-
-Compared with FP16 storage:
-
-FP16 fails at extremely low corruption
-
-DTDR remains numerically stable across orders of magnitude more damage
-
-Meaning:
-
-DTDR converts storage failure into noise.
-
-8. Persistent Storage Behaviour
-Representation	Raw Size	After ZIP	Notes
-FP16 HuggingFace	~14.5 GB	~13.8–14.2 GB	Already high entropy
-GGUF Q8	~7.2 GB	~7.1–7.2 GB	Essentially incompressible
-DTDR-INT8	~6.6–6.9 GB	~4.0–5.0 GB	Significant residual structure
-DTDR reconstructed FP16	~14.5 GB runtime	N/A	Functional reconstruction
-
-Meaning:
-
-DTDR is structured memory, not entropy-saturated encoding.
-
-9. Emergence vs Degradation (Key Result)
-Condition	Behaviour
-Corruption	Smooth degradation
-Truncation	Sudden appearance of language
-
-Interpretation:
-
-The model exists only when global constraints close.
-
-Conceptual Interpretation
-
-DTDR behaves like triangulation:
-
-Move satellites → position drifts
-
-Remove satellites → no position exists
-
-A neural network stored in DTDR is a solved system, not a parameter list.
-
-Summary
-
-DTDR simultaneously exhibits:
-
-semantic similarity preservation
-
-functional reconstruction
-
-computation in compressed space
-
-different ANN scaling laws
-
-graceful degradation
-
-emergence thresholds
-
-residual compressibility
-
-No conventional compression or quantisation scheme shows this combination.
-
-Status
-
-Research prototype and experimental demonstration.
+**UK Patent Application GB2602157.6**
 
 ---
 
-## Repository Structure
+## What DTDR does
 
+A Hadamard (or composite) transform distributes each vector's information
+across all coefficients. The transformed coefficients are then quantised
+and stored. From that point on, distance calculations, nearest-neighbour
+search, and neural network inference operate on the quantised
+transform-domain data without reconstruction.
 
+Three properties follow from this design:
 
-```text
+1. **Direct computation** — dot products and cosine similarity are
+   evaluated in the transform domain. No decompression path exists
+   because none is needed.
+
+2. **Graceful degradation** — corrupting stored coefficients degrades
+   output smoothly rather than causing catastrophic failure, because
+   no single coefficient carries isolated meaning.
+
+3. **Emergence under truncation** — removing coefficients does not
+   produce a weaker model. Instead, behaviour is absent until a
+   critical fraction is present, then appears rapidly. The representation
+   stores distributed constraints, not localised features.
+
+These properties are not theoretical claims. Each is demonstrated
+experimentally in this repository.
+
+---
+
+## Key results
+
+### Inference acceleration (Mistral-7B)
+
+DTDR-compressed weights running on a 7-billion-parameter language model:
+
+| Metric | Result |
+| ------ | ------ |
+| GPU throughput | 2× faster than INT8 quantisation |
+| DRAM traffic | 5× reduction vs INT8 |
+| Output quality | Functionally equivalent |
+
+### Retrieval routing (GloVe, 200k vectors)
+
+DTDR used as a routing layer ahead of conventional ANN search:
+
+| Metric | Result |
+| ------ | ------ |
+| Distance evaluations | 10×–40× fewer than conventional IVF |
+| Shard fan-out | 2 partitions vs 20–100 |
+| Memory bandwidth | 5×–50× reduction (scales with dimension) |
+| hit@1 | Approaches 1.0 with local refinement only |
+
+Recall improves by increasing local compute, not by searching
+more partitions. This converts distributed search into a local
+ranking problem.
+
+### Emergence threshold (Mistral-7B under truncation)
+
+Progressive reconstruction of a DTDR-stored model reveals a phase
+transition rather than gradual improvement:
+
+| Coefficients present | Cosine similarity to full model |
+| -------------------- | ------------------------------- |
+| < 10% | ≈ −0.3 (anti-correlated) |
+| 20% | 0.32 |
+| 60% | 0.59 |
+| 80% | 0.74 |
+| 100% | 1.00 |
+
+![Emergence curve](experiments/06_emergence/emergence_curve.png)
+
+Behaviour does not degrade proportionally. It is absent, then present.
+This is consistent with a distributed constraint system —
+analogous to GPS triangulation, where position does not exist
+until enough satellites are available.
+
+### Dilution evidence (novel ANN signal)
+
+DTDR generates a signal not available in raw embedding space:
+the rate at which similarity concentrates or disperses under
+progressive aggregation of transform-domain coefficients.
+This signal is **orthogonal** to existing ANN optimisations and
+can be used to improve routing decisions without modifying the
+underlying search index.
+
+---
+
+## Why DTDR is not compression
+
+Compression optimises **reconstruction fidelity** — the goal is to
+recover the original data as closely as possible.
+
+DTDR optimises **functional equivalence** — the goal is to preserve
+computational outcomes (distances, rankings, inference results)
+while the data remains in its stored form.
+
+This is a different objective with different engineering consequences.
+A compressed model must be decompressed to run. A DTDR-stored model
+runs as stored.
+
+---
+
+## Repository structure
+
+```
 experiments/
-├── 01_model_inference/
-├── 02_dtdr_end_to_end_search/
-├── 03_embedding_search/
-├── 04_graceful_degradation/
-├── 05_storage_accounting/
-├── 06_emergence_from_distribution/
+  01_mistral_7b/       — Inference acceleration benchmarks
+  02_dilution/         — Novel ANN signal discovery
+  03_routing/          — IVF routing with constant fan-out
+  04_corruption/       — Graceful degradation under bit-level damage
+  05_storage/          — Storage accounting and residual compression
+  06_emergence/        — Emergence threshold under truncation
+```
 
-DTDR_RAG_double_transform_demo.ipynb
+Each experiment folder contains its own README, code, and results.
 
-Patent & Commercial Licensing
+---
 
-DTDR is the subject of a filed UK patent application:
+## Running the experiments
 
-UK Patent Application No. GB2602157.6
+Requirements vary by experiment. Most need Python, NumPy, and PyTorch.
+The Mistral-7B experiments require a CUDA GPU and ~16 GB VRAM.
+See individual experiment READMEs for specific instructions.
 
-This repository is provided for research and evaluation purposes.
+---
 
-For commercial licensing, strategic partnerships, or IP inquiries:
+## Commercial applications
 
-Contact: dtdr@multiverse1.com
+DTDR is applicable wherever high-dimensional vectors are stored,
+transmitted, or compared at scale:
 
+- **Vector databases** — routing layer reducing shard fan-out
+  by an order of magnitude
+- **LLM inference** — weight storage enabling direct computation
+  with reduced memory traffic
+- **Edge deployment** — smaller memory footprint without
+  decompression overhead
+- **Retrieval-augmented generation** — faster candidate selection
+  in the ANN stage of RAG pipelines
 
-See LICENSE_NOTICE.md for evaluation terms.
+The improvements are orthogonal to existing optimisations
+(quantisation, pruning, knowledge distillation) and can be
+composed with them.
+
+---
+
+## IP and licensing
+
+DTDR is the subject of UK Patent Application GB2602157.6.
+
+This repository is published for evaluation and research purposes.
+Production use requires a commercial licence.
+
+For licensing, strategic partnerships, or technical discussion:
+**dtdr@multiverse1.com**
+
+---
+
+## Citation
+
+```bibtex
+@misc{west2024dtdr,
+  title   = {Distributed Transform-Domain Representation for
+             Neural Network Storage and Computation},
+  author  = {West, Jonathan},
+  year    = {2024},
+  note    = {UK Patent Application GB2602157.6},
+  url     = {https://github.com/UnrealJon/DTDR}
+}
+```
+
+---
+
+## Author
+
+**Jonathan West**
+Independent researcher. Formerly NHS Consultant in Obstetrics
+and Gynaecology, Royal Devon & Exeter NHS Foundation Trust.
+Cambridge physiology background; self-taught in machine learning.
