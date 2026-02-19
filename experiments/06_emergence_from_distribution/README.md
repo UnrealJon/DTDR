@@ -1,223 +1,156 @@
-# Experiment 06 — Emergence vs Graceful Degradation in DTDR
+# Emergence & Guided Reconstruction Experiments
 
-## Purpose
+This folder contains experiments demonstrating how DTDR-stored models behave when **partially known**.
 
-This experiment investigates how neural network behaviour changes when a model
-stored in **DTDR (Distributed Transform Domain Representation)** is only partially available.
+The central question is:
 
-Two separate properties are studied:
+> Does a DTDR model fail because information is missing, or because the reconstruction problem is under-constrained?
 
-1. **Graceful degradation under corruption**
-2. **Emergence of inference under truncation**
-
-At first glance these appear contradictory.
-
-They actually reveal the defining characteristic of DTDR:
-
-> The model’s function is stored as a distributed constraint system rather than as localised parameters.
+The experiments progressively reconstruct a DTDR-compressed model using only a fraction of its stored coefficients and compare different ways of filling the missing portions.
 
 ---
 
-## Background
+## Concept
 
-Typical neural network storage behaves locally:
+Three completion strategies are tested:
 
-- Removing parameters weakens behaviour
-- Some weights matter more than others
-- A smaller model behaves like a weaker model
+| Method      | Meaning               |
+| ----------- | --------------------- |
+| Zero fill   | No prior knowledge    |
+| Random fill | Incorrect prior       |
+| Guided fill | Weak compatible prior |
 
-DTDR changes this.
+Observed behaviour:
 
-Instead of storing meaning in specific weights, the representation distributes
-semantic information across many mutually dependent coefficients.
+| Condition            | Behaviour                            |
+| -------------------- | ------------------------------------ |
+| Too few coefficients | No coherent output                   |
+| Random completion    | Stable nonsense                      |
+| Weak aligned prior   | Gradual recovery of correct language |
 
-The question becomes:
+This demonstrates:
 
-> What happens if we *damage* the information vs *remove* the information?
+> DTDR models behave like constraint systems rather than parameter lists.
 
----
-
-## The Two Experiments
-
-### 1) Corruption Sweep — Graceful Degradation
-
-We progressively corrupt stored DTDR coefficients while keeping all of them present.
-
-This simulates:
-
-- storage damage
-- quantisation
-- transmission noise
-
-| Damage | Behaviour |
-|------|------|
-Small | Slightly worse output |
-Medium | Noticeably degraded output |
-Large | Very poor output |
-Extreme | Failure |
-
-**Behaviour declines smoothly.**
-
-The model still “knows what it is trying to say”, but imperfectly.
+The model is not merely degraded when incomplete — it is **underdetermined**.
+Providing even a weak compatible prior stabilises reconstruction.
 
 ---
 
-### 2) Truncation — Emergence Threshold
+## Files
 
-We reconstruct only a fraction of coefficients.
+### `progressive_emergence_demo.py`
 
-This simulates:
+Original emergence experiment.
 
-- partial download
-- missing shards
-- incomplete reconstruction
+Shows the sharp functional threshold when reconstructing a DTDR model using only a fraction of stored coefficients.
 
-| Fraction present | Behaviour |
-|------|------|
-< 20% | No language at all |
-20–60% | Unstable fragments |
-60–80% | Partial linguistic structure |
-> 80% | Rapid stabilisation |
-100% | Correct model |
+Purpose:
 
-**Behaviour does NOT degrade smoothly — it appears suddenly.**
+* Demonstrates emergence behaviour
+* Establishes difference between truncation and corruption
 
 ---
 
-## Why These Results Are Different
+### `progressive_emergence_demo_v2.py`
 
-The two tests modify different properties of the representation.
+Guided reconstruction experiment.
 
-| Experiment | Mathematical effect | Result |
-|------|------|------|
-Corruption | Perturb constraints | Degraded solution |
-Truncation | Remove constraints | No solution → Solution |
+Extends the first experiment by introducing a weak aligned prior (slightly corrupted model) to guide reconstruction.
 
----
+Purpose:
 
-## Intuition: GPS Triangulation
-
-Corruption experiment:
-> Move satellites slightly → position estimate drifts
-
-Truncation experiment:
-> Remove satellites → no position exists until enough satellites are available
-
-DTDR behaves like triangulation — language exists only once enough global constraints are present.
+* Tests whether failure is caused by missing data or missing constraints
+* Demonstrates stabilisation from compatible priors
 
 ---
 
-## What This Shows About DTDR
+## Requirements
 
-DTDR is **not a hierarchical encoding** (like JPEG).
+* Python ≥ 3.10
+* PyTorch
+* Transformers
+* safetensors
+* A DTDR-compressed Mistral-7B `.pkl` file
 
-Hierarchical encoding:
-> Coarse meaning first, details later
-
-DTDR encoding:
-> Meaning exists only collectively
-
-No subset of coefficients independently stores interpretable behaviour.
+The first run will automatically download the base Mistral tokenizer/model into a HuggingFace cache directory.
 
 ---
 
-## Practical Interpretation
+## Running the Experiments
 
-| Representation | Partial Data Behaviour |
-|------|------|
-Standard weights | Weaker model |
-Compressed | Degraded model |
-DTDR | No model → Model transition |
+### 1) Baseline — Emergence Threshold
 
-DTDR stores **consistency conditions**, not individual features.
+Collapse when insufficient coefficients exist.
 
----
-
-## Running the Experiment
-
-### Requirements
-
-- Python
-- PyTorch
-- Transformers
-- matplotlib
-
-### Command
-
-From this folder:
-
-python progressive_emergence_demo.py --pkl ../compressed_mistral_7b.pkl --cache-dir ../hf_cache
-
-
-
-### Outputs
-emergence_curve.csv
-emergence_curve.png
-
-
-
-The plot shows cosine similarity to the full model.
-
-Expected: an S-curve showing sudden emergence of inference.
+```bash
+python progressive_emergence_demo_v2.py \
+  --pkl "mistral_7b_compressed_2x.pkl" \
+  --mode zero
+```
 
 ---
 
-## What the Curve Means
+### 2) Random Completion — Incorrect Constraints
 
-Low fractions:
-> Insufficient constraints → unstable system
+Produces stable but meaningless output.
 
-Critical region:
-> Constraint closure begins
-
-High fractions:
-> Stable attractor (language) forms
-
-The model does not gradually improve — it becomes *possible*.
+```bash
+python progressive_emergence_demo_v2.py \
+  --pkl "mistral_7b_compressed_2x.pkl" \
+  --mode random
+```
 
 ---
 
-## Relationship to Graceful Degradation
+### 3) Guided Reconstruction — Weak Prior
 
-These results are complementary, not contradictory.
+Gradual recovery of coherent language.
 
-| Property | What it tests | Meaning |
-|------|------|------|
-Graceful degradation | Stability of solution | Robustness |
-Emergence threshold | Existence of solution | Distributed encoding |
-
-Together they indicate:
-
-> DTDR stores function globally and reconstructs behaviour only when consistency conditions are satisfied.
+```bash
+python progressive_emergence_demo_v2.py \
+  --pkl "mistral_7b_compressed_2x.pkl" \
+  --anchor-pkl "compressed_mistral_7b_f1e-06_s0.pkl" \
+  --mode guided
+```
 
 ---
 
-## Significance
+## Output
 
-This experiment demonstrates that DTDR does not store behaviour in identifiable components.
+The script produces:
 
-Instead:
-
-- Individual coefficients are not meaningful
-- Behaviour emerges from collective consistency
-- Incomplete representations cannot act as weaker models
-
-This distinguishes DTDR from compression, pruning, or quantisation.
+* Console text samples at each reconstruction fraction
+* Cosine similarity measurements
+* Top-token overlap metrics
+* Emergence curve plots (`.png` + `.csv`)
 
 ---
 
-## Summary
+## Interpretation
 
-**Graceful degradation:**  
-The model still knows what to say, but says it badly.
+These experiments show a fundamental distinction:
 
-**Emergence threshold:**  
-The model does not know what to say until enough of itself exists.
+| Representation type  | Behaviour when incomplete              |
+| -------------------- | -------------------------------------- |
+| Conventional weights | degraded but functional                |
+| DTDR                 | non-functional until constraints close |
 
-DTDR therefore represents models as coherent distributed constraint systems rather than collections of functional parts.
+Adding a weak compatible prior converts the problem from:
 
+> unsolvable → solvable
 
+This indicates DTDR stores a **solution manifold**, not independent parameters.
 
+---
 
+## Why This Matters
 
+This behaviour explains multiple DTDR properties:
 
+* graceful degradation under corruption
+* sharp emergence threshold
+* recovery using weak priors
+* stability under noise
+
+The experiments therefore test the reconstruction dynamics of the representation, not compression performance.
