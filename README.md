@@ -1,18 +1,20 @@
 # DTDR — Distributed Transform-Domain Representation
 
-DTDR is a method for representing numerical data — including machine-learning model parameters and vector embeddings — in a distributed transform domain in which behaviour depends on global consistency of the representation rather than precision of individual parameters.
+DTDR is a persistent numerical representation for machine-learning data — including model parameters and vector embeddings — stored directly in a distributed transform domain.
 
-Unlike conventional floating-point storage, DTDR does not primarily store independently meaningful weights.  
-Instead, it stores a system of distributed constraints whose solution corresponds to the model.  
-As a result, models stored in DTDR exhibit different operational behaviour from standard parameter formats:
+In DTDR, the stored form is itself a compute-capable representation rather than an intermediate encoding.  
+The data does not need to be reconstructed into floating-point weights before use: inference, similarity search, and approximate nearest-neighbour (ANN) traversal can operate directly on the stored representation.
+
+Unlike conventional parameter storage, DTDR does not primarily store independently meaningful weights.  
+Instead, it stores a globally distributed system of constraints whose solution corresponds to the model.  
+Because behaviour depends on consistency of the whole representation rather than precision of individual values, DTDR exhibits characteristic operational properties:
 
 - corruption produces gradual degradation
 - incompleteness produces absence of behaviour until sufficient data is present
 - compatible priors enable recovery from otherwise non-functional states
-- computation and similarity search operate directly in the stored domain
+- computation occurs in the stored domain without format conversion
 
-DTDR therefore acts as a persistent computational representation rather than a compression stage.  
-Inference, similarity search, and approximate nearest-neighbour (ANN) traversal can be performed directly in the transformed domain without reconstructing full-precision data.
+DTDR therefore functions as a persistent computational representation rather than a compression stage or transport format.
 
 This repository contains reference implementations and experiments demonstrating these properties.
 
@@ -27,7 +29,8 @@ This repository contains reference implementations and experiments demonstrating
 - Functional threshold under truncation and recovery using weak aligned priors
 - Substantial residual lossless compression (ZIP), indicating retained structure
 
-> DTDR is not a codec — it is a numerical representation with different reconstruction behaviour.
+> DTDR is not a codec — it is a persistent numerical representation with distinct reconstruction behaviour.
+.
 
 
 ---
