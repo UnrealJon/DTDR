@@ -1,19 +1,34 @@
-# DTDR  Distributed Transform-Domain Representation
+# DTDR — Distributed Transform-Domain Representation
 
-DTDR is a method for representing numerical data, including machine-learning model parameters and vector embeddings, in a distributed transform domain that preserves computational functionality while reducing memory footprint and bandwidth pressure. It has been designed as a persistent transform-domain representation, with an associated on-disk file format for storing such data, and in many cases offers advantages over conventional floating-point representations. For example, unlike conventional compression, DTDR maintains a compute-capable representation: inference, similarity search, and approximate nearest-neighbour (ANN) traversal can be performed directly in the transformed domain, without reconstructing full-precision data.
-This repository contains **reference implementations and experiments** demonstrating these properties.
+DTDR is a method for representing numerical data — including machine-learning model parameters and vector embeddings — in a distributed transform domain in which behaviour depends on global consistency of the representation rather than precision of individual parameters.
+
+Unlike conventional floating-point storage, DTDR does not primarily store independently meaningful weights.  
+Instead, it stores a system of distributed constraints whose solution corresponds to the model.  
+As a result, models stored in DTDR exhibit different operational behaviour from standard parameter formats:
+
+- corruption produces gradual degradation
+- incompleteness produces absence of behaviour until sufficient data is present
+- compatible priors enable recovery from otherwise non-functional states
+- computation and similarity search operate directly in the stored domain
+
+DTDR therefore acts as a persistent computational representation rather than a compression stage.  
+Inference, similarity search, and approximate nearest-neighbour (ANN) traversal can be performed directly in the transformed domain without reconstructing full-precision data.
+
+This repository contains reference implementations and experiments demonstrating these properties.
 
 ---
 
 ## TL;DR (Why this repository exists)
 
-- **3–4× storage reduction** for large models and embeddings  
-- **End-to-end ANN search entirely in DTDR** (IVF + HNSW + binary reranking)  
-- **Novel ANN signal (“dilution evidence”)** enabling recall–latency trade-offs unavailable in standard representations  
-- **Graceful degradation** under quantisation *and* on-disk corruption  
-- **Substantial residual lossless compression** (ZIP), indicating retained structure  
+- 3–4× storage reduction for large models and embeddings
+- End-to-end ANN search entirely in DTDR (IVF + HNSW + binary reranking)
+- Novel ANN signal (“dilution evidence”) enabling recall–latency trade-offs unavailable in standard representations
+- Graceful degradation under quantisation and on-disk corruption
+- Functional threshold under truncation and recovery using weak aligned priors
+- Substantial residual lossless compression (ZIP), indicating retained structure
 
-DTDR is not a codec: it is a **numerical representation**.
+> DTDR is not a codec — it is a numerical representation with different reconstruction behaviour.
+
 
 ---
 
