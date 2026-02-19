@@ -162,7 +162,7 @@ DTDR_RAG_double_transform_demo.ipynb
 
 Patent & Commercial Licensing
 
-DTDR is the subject of a filed UK patent application:
+UK patent application under accelerated examination (Green Channel)
 
 UK Patent Application No. GB2602157.6
 
