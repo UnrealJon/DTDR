@@ -2,63 +2,53 @@
 
 DTDR is a persistent numerical representation for machine-learning data — including model parameters and vector embeddings — stored directly in a distributed transform domain.
 
-In DTDR, the stored form is itself a compute-capable representation rather than an intermediate encoding.  
-The data does not need to be reconstructed into floating-point weights before use: inference, similarity search, and approximate nearest-neighbour (ANN) traversal can operate directly on the stored representation.
+In DTDR, the stored form is itself compute-capable.  
+Inference, similarity search, and approximate nearest-neighbour (ANN) traversal can operate directly on the stored representation without reconstructing full-precision floating-point weights.
 
 Unlike conventional parameter storage, DTDR does not primarily store independently meaningful weights.  
-Instead, it stores a globally distributed system of constraints whose solution corresponds to the model.  
-Because behaviour depends on consistency of the whole representation rather than precision of individual values, DTDR exhibits characteristic operational properties:
+Instead, it stores a globally distributed system of constraints whose solution corresponds to the model.
 
-- corruption produces gradual degradation
-- incompleteness produces absence of behaviour until sufficient data is present
-- compatible priors enable recovery from otherwise non-functional states
-- computation occurs in the stored domain without format conversion
+Because behaviour depends on global consistency rather than precision of individual parameters, DTDR exhibits distinctive operational properties:
 
-DTDR therefore functions as a persistent computational representation rather than a compression stage or transport format.
+- Corruption produces gradual degradation
+- Truncation produces functional thresholds
+- Compatible priors can restore behaviour
+- Computation occurs directly in the transform domain
 
-This repository contains reference implementations and experiments demonstrating these properties.
-
----
-
-## TL;DR (Why this repository exists)
-
-- 3–4× storage reduction for large models and embeddings
-- End-to-end ANN search entirely in DTDR (IVF + HNSW + binary reranking)
-- Novel ANN signal (“dilution evidence”) enabling recall–latency trade-offs unavailable in standard representations
-- Graceful degradation under quantisation and on-disk corruption
-- Functional threshold under truncation and recovery using weak aligned priors
-- Substantial residual lossless compression (ZIP), indicating retained structure
-
-> DTDR is not a codec — it is a persistent numerical representation with distinct reconstruction behaviour.
-.
-
+DTDR functions as a persistent computational representation, not a compression codec.
 
 ---
 
-## Key Results
+## TL;DR
 
-### Model Storage & Inference
+- 2–4× storage reduction for large models and embeddings
+- Compute-capable INT8 representation
+- Substantial residual lossless compressibility (ZIP)
+- Graceful degradation under corruption
+- End-to-end ANN search in transform domain
+- Transform-domain micro-aggregation signals for routing
 
-DTDR-compressed model parameters can be reconstructed to a *working numerical precision*
-sufficient for standard inference, without specialised kernels.
+---
 
-| Model | FP16 | DTDR-INT8 | Compression | Similarity |
-|------|------|-----------|-------------|------------|
+## 1. Model Storage & Inference
+
+DTDR-compressed model parameters can be reconstructed to numerically working precision sufficient for standard inference.
+
+| Model | FP16 | DTDR-INT8 | Compression | Cosine Similarity |
+|------|------|-----------|-------------|------------------|
 | Mistral-7B | ~14.5 GB | ~6.7 GB | ~2.2× | 0.9998 |
 
-*Inference throughput comparable to FP16 baseline.*
+Inference throughput remains comparable to FP16 baselines.
 
-See **Experiment 01** for details.
+See: `experiments/01_model_inference/`
 
 ---
 
-### Residual Lossless Compression (ZIP)
+## 2. Residual Lossless Compression
 
 DTDR representations retain structured regularity in the transform domain.
-As a result, DTDR-stored model parameters exhibit substantial **additional
-lossless compression** under standard tools such as ZIP.
 
-Measured on INT8 representations of **Mistral-7B**:
+Measured on INT8 Mistral-7B:
 
 | Representation | Stored Size | ZIP Size | Additional Reduction |
 |---------------|-------------|----------|----------------------|
@@ -66,103 +56,99 @@ Measured on INT8 representations of **Mistral-7B**:
 | INT8 GGUF | ~8.2 GB | ~7.9 GB | ~3–4% |
 | **INT8 DTDR** | **~6.7 GB** | **~4.4–4.7 GB** | **~30–35%** |
 
-This secondary compression is **optional and orthogonal** to DTDR.
-All DTDR storage reductions are achieved *prior* to ZIP compression.
+Secondary ZIP compression is optional and orthogonal to DTDR.
 
 ---
 
-### Storage Robustness Under On-Disk Corruption
+## 3. Storage Robustness
 
-DTDR was evaluated as a **storage representation** under random on-disk corruption.
+DTDR was evaluated under identical random byte corruption compared to FP16 safetensors.
 
-Identical random byte corruption was applied to:
-- FP16 safetensors (baseline)
-- DTDR Hadamard-transformed artefacts
+Observed behaviour:
 
-Reconstruction fidelity was measured using cosine similarity and relative L2 error.
+| Representation | Corruption Behaviour |
+|---------------|----------------------|
+| FP16 | Catastrophic numerical failure at small corruption levels |
+| DTDR | Smooth statistical degradation over orders of magnitude greater corruption |
 
-**Result:**  
-FP16 exhibits catastrophic numerical failure at extremely small corruption levels.  
-DTDR redistributes damage and degrades **smoothly and statistically**, preserving numerical
-validity over orders of magnitude greater corruption.
+DTDR redistributes damage across coefficients rather than localising it.
 
-See:  
-`experiments/04_graceful_degradation/dtdr_disk_corruption/`
+See: `experiments/04_graceful_degradation/`
 
 ---
 
-## Clarification: Corruption vs Incompleteness
+## 4. End-to-End ANN in DTDR Domain
 
-DTDR distributes information across coefficients rather than storing it in isolated parameters.  
-Because of this, different types of data damage produce qualitatively different behaviour.
+DTDR supports ANN pipelines entirely within the transform domain.
 
-| Condition | Observed behaviour |
-|--------|------|
-| Bit corruption / noise | Smooth degradation of results |
-| Missing or truncated data | Behaviour absent until sufficient data present |
-| Sufficient data restored | Rapid stabilisation of function |
+Experiment 02 integrates:
 
-In practical terms:
+- IVF partitioning
+- HNSW per-list search
+- Binary reranking
+- Transform-domain scoring
 
-> DTDR is tolerant to *damage* but dependent on *completeness*.
+All without reconstructing full-precision vectors.
 
-This differs from conventional parameter storage, where losing part of a file typically produces a smaller but still functioning model.  
-In DTDR, behaviour emerges once enough global constraints are available — similar to triangulation, where position does not exist until enough reference points are present.
-
-This explains why DTDR simultaneously exhibits graceful degradation under corruption while also showing a sharp functional threshold under truncation.
-
+See: `experiments/02_dtdr_end_to_end_search/`
 
 ---
 
-### End-to-End ANN Search (DTDR Domain)
+## 5. Micro-Dilution Routing Signal
 
-DTDR can act as a **unified numerical domain** for ANN pipelines.
+Earlier versions of this repository reported large recall gains from a “dilution evidence” heuristic.  
+Subsequent corrections revealed those gains were overstated due to timing scope and evaluation inconsistencies.
 
-In **Experiment 02**, we demonstrate an end-to-end ANN search operating *entirely* on DTDR vectors,
-integrating IVF, HNSW, and binary distance estimation — with no full-precision reconstruction.
+The revised approach evaluates a level-1 transform-domain aggregation:
 
-| Configuration | Recall@10 | Mean latency |
-|--------------|-----------|--------------|
-| DTDR-IVF-HNSW-Binary (`nprobe=4`) | 0.63 | 2.9 ms |
-| **+ DTDR dilution evidence (`nprobe=4`)** | **0.78** | **3.1 ms** |
-| DTDR-IVF-HNSW-Binary (`nprobe=8`) | 0.80 | 4.9 ms |
+For each IVF list, pairwise sums of vectors are precomputed:
 
-DTDR’s **multi-resolution dilution evidence** recovers ~15 percentage points of recall
-at low probe counts, approaching higher-cost baselines with ~40% lower latency.
+u_k = normalize(x_{2k} + x_{2k+1})
 
-This signal does **not exist** in conventional vector representations.
+At query time, lists are scored using:
+
+s(list) = max_k (q · u_k)  or  top-k mean
+
+On SIFT1M (200k subset, cosine-consistent GT, nprobe=1):
+
+| Routing Method | List Hit-Rate |
+|----------------|---------------|
+| Centroid only | 0.4865 |
+| + Micro-dilution (level-1) | 0.4915 |
+
+This represents a small but measurable improvement (~+1%) at ~+2ms/query CPU overhead in the current prototype.
+
+Key observations:
+
+- Deep hierarchical dilution does not improve routing.
+- Signal is concentrated in shallow (level-1) aggregation.
+- Micro-aggregation behaves as a secondary routing feature.
+- The effect is incremental, not transformative.
+
+The result is reproducible and provided transparently.
 
 ---
 
-## What Is “Dilution Evidence”?
+## 6. What Dilution Is — and Is Not
 
-DTDR distributes information across coefficients at multiple aggregation scales.
-By examining how similarity signals persist under progressive aggregation (or dilution),
-it is possible to infer which regions of the database are likely to contain relevant
-neighbours *before* probing them.
+Dilution is not a navigable tree search structure.
 
-This provides a coarse localisation signal that is:
-- orthogonal to centroids,
-- complementary to graph traversal,
-- inexpensive to compute,
-- unavailable in localised representations.
+Deep aggregation collapses discriminative signal.
+
+However, shallow transform-domain mixing produces a measurable list-level containment signal.
+
+This signal can:
+
+- Slightly improve IVF routing
+- Act as a secondary ranking feature
+- Operate entirely in transform domain
+
+It does not replace centroids or graph traversal.
 
 ---
 
-## Why DTDR Is Not Just Compression
+## 7. Repository Structure
 
-Compression optimises **reconstruction fidelity**.  
-DTDR optimises **functional equivalence**.
-
-Key differences:
-
-- Information is deliberately **distributed**, not localised  
-- Partial corruption leads to **graceful degradation**, not failure  
-- Exact reconstruction is optional  
-- Computation and search occur **directly in the transform domain**  
-- DTDR exposes **new usable structure**, not just smaller files  
-
-DTDR should be viewed as a **numerical representation**, not a storage format.
 
 ---
 
