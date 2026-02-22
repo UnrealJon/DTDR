@@ -1,162 +1,168 @@
 # DTDR Experiments
 
-This directory contains a curated set of **claim-aligned, runnable experiments**
-demonstrating the properties of the **Distributed Transform-Domain Representation (DTDR)**.
+A structured sequence of runnable experiments demonstrating the behavioural, computational, and storage properties of **Distributed Transform-Domain Representation (DTDR)**.
 
-DTDR is treated throughout as a **persistent, on-disk numerical representation**
-that remains *compute-capable*: inference, similarity search, and approximate
-nearest-neighbour (ANN) traversal can be performed directly in the transform domain,
-without reconstructing full-precision floating-point data.
+DTDR is treated throughout as a **persistent, compute-capable numerical representation**: models, embeddings, and vectors are stored in transform-domain form and operated on directly, without reconstructing full-precision floating-point data.
 
-Each experiment is self-contained and accompanied by a focused README describing:
-- purpose and hypothesis,
-- methodology,
-- and key results.
-
-Readers are encouraged to begin with the **Primary Demonstration** below.
+The experiments progress from minimal mathematical demonstrations to full-scale model and ANN pipeline tests.
 
 ---
 
-## Primary Demonstration (Start Here)
+## System Requirements
 
-### DTDR RAG Demo with Composite Transforms
+These experiments have been developed and tested on a consumer workstation:
 
-**File:** `DTDR_RAG_double_transform_demo.ipynb`  
-**Location:** this directory
+| Component | Specification |
+|-----------|--------------|
+| CPU | Intel i9-12900F |
+| RAM | 64GB DDR5 |
+| GPU | NVIDIA RTX 3090 (24GB VRAM) |
+| OS | Windows 11 |
 
-This notebook provides a **fully self-contained, human-verifiable demonstration**
-of DTDR behaviour using retrieval-style (RAG-like) similarity search over
-public-domain texts (*Alice in Wonderland*, *Sherlock Holmes*).
-
-It demonstrates:
-
-- DTDR as a **persistent, compute-capable file representation**
-- direct similarity computation in the DTDR domain
-- single and composite DTDR constructions (Hadamard, Hadamard + DCT)
-- graceful degradation of retrieval quality under simulated corruption
-- comparison against a no-transform INT8 baseline
-
-The notebook:
-- downloads required data automatically,
-- runs end-to-end in a clean Python environment,
-- produces both tabular results and degradation plots.
-
-This is the recommended **first point of contact** for understanding DTDR.
+> **Notes:**
+> - Experiment 00 runs on **CPU only**
+> - Experiments 01–05 vary in requirements (see individual sections below)
+> - GPU is required for large-model experiments involving Mistral 7B
+> - Significant disk space is required for model downloads
+> - All experiments are written in **Python**
 
 ---
 
-## Experiment Index
+## Experiment Overview
 
-### Experiment 01 — Functional Reconstruction of a DTDR-Stored Model
+> **Recommended execution order:** 00 → 01 → 03 → 04 → 02 → 05
+
+---
+
+### 00 — Start Here: DTDR Geometry & Degradation Demo
+
+**Location:** `00_startDTDR_demo/`  
+**Files:** `.ipynb` and `.py` versions available
+
+The minimal, self-contained introduction to DTDR. This is the **recommended first step for all readers**.
+
+**Demonstrates:**
+- Similarity preservation under orthogonal transforms
+- Direct computation in transform-domain representations
+- Composite transform constructions
+- Graceful degradation under coefficient loss
+- Comparison with a no-transform INT8 baseline
+
+**Requirements:** No external models · No GPU · Public-domain text downloaded automatically
+
+---
+
+### 01 — Functional Reconstruction of a DTDR-Stored Model
 
 **Location:** `01_model_inference/`
 
-Demonstrates that a numerical model stored persistently in DTDR form can be
-reconstructed to a numerically different but **functionally equivalent**
-representation suitable for inference.
+Demonstrates that a model stored persistently in DTDR form can be reconstructed to a numerically different but functionally equivalent representation for inference.
 
-Focus:
-- DTDR as a persistent on-disk representation
-- functional equivalence vs numerical fidelity
-- robustness under controlled coefficient perturbation
+**Focus:**
+- Persistent on-disk DTDR storage
+- Functional equivalence vs numerical identity
+- Robustness under perturbation
 
-See: `01_model_inference/README.md`
+**Requirements:** HuggingFace model download required (e.g. `mistralai/Mistral-7B-Instruct-v0.3`) · GPU strongly recommended · Significant disk space required
 
 ---
 
-### Experiment 02 — End-to-End ANN Search in the DTDR Domain
+### 02 — End-to-End ANN Search in the DTDR Domain
 
 **Location:** `02_dtdr_end_to_end_search/`
 
-Demonstrates a complete approximate nearest-neighbour (ANN) pipeline operating
-*entirely* in the DTDR domain, integrating:
+Implements a complete approximate nearest-neighbour (ANN) pipeline operating entirely in the DTDR domain.
 
-- IVF (inverted file indexing),
-- HNSW graph traversal,
-- binary distance estimation (RaBitQ-like),
-- DTDR-specific **multi-resolution dilution evidence** for coarse localisation.
+**Includes:**
+- IVF (inverted file indexing)
+- HNSW graph traversal
+- Binary distance approximation (RaBitQ-like)
+- DTDR-specific multi-resolution dilution signal
 
-Focus:
-- DTDR as a native computational domain
-- recall / latency trade-offs
-- novel ANN signals enabled by distributed representations
+**Focus:**
+- DTDR as a primary computational domain
+- Recall / latency trade-offs
+- Additional routing signals enabled by distributed representations
 
-See: `02_dtdr_end_to_end_search/README.md`
+**Requirements:** GloVe embeddings (downloaded automatically or manually) · Moderate RAM · CPU sufficient, GPU optional
 
 ---
 
-### Experiment 03 — Embedding Similarity Search in the DTDR Domain
+### 03 — Embedding Similarity Search in DTDR
 
 **Location:** `03_embedding_search/`
 
-Demonstrates similarity search over embedding vectors represented, stored,
-and queried directly in the DTDR domain.
+Demonstrates similarity search over embedding vectors stored and queried directly in transform-domain form.
 
-Focus:
-- DTDR representations of embedding spaces
-- similarity preservation under orthogonal transforms
-- functional equivalence of DTDR-domain search results
+**Focus:**
+- Similarity preservation under orthogonal transforms
+- Retrieval equivalence in DTDR domain
 
-See: `03_embedding_search/README.md`
+**Requirements:** CPU sufficient
 
 ---
 
-### Experiment 04 — Graceful Degradation Under Perturbation
+### 04 — Graceful Degradation Under Perturbation
 
 **Location:** `04_graceful_degradation/`
 
-Explores DTDR behaviour under controlled perturbation, partial coefficient loss,
-and on-disk corruption.
+Systematic evaluation of DTDR behaviour under adverse conditions.
 
-Includes:
-- coefficient dropout experiments,
-- block-loss simulations,
-- file-on-disk corruption sweeps (DTDR vs FP16).
+**Covers:**
+- Coefficient dropout
+- Block loss
+- File corruption simulations
+- Comparison against FP16 baselines
 
-Focus:
-- robustness to partial data loss
-- smooth degradation vs catastrophic failure
-- contrast with localised floating-point representations
+**Focus:**
+- Smooth degradation vs catastrophic failure
+- Structural robustness of distributed representations
 
-See: `04_graceful_degradation/README.md`
+**Requirements:** CPU sufficient · GPU optional for larger models
 
 ---
 
-### Experiment 05 — Storage Accounting and Residual Compressibility
+### 05 — Storage Accounting & Residual Compressibility
 
 **Location:** `05_storage_accounting/`
 
-Provides transparent accounting of DTDR persistent storage footprint relative to
-conventional floating-point and quantised formats.
+Quantitative storage analysis comparing representation formats.
 
-Includes analysis of **residual lossless compressibility** (e.g. ZIP), highlighting
-structural differences between DTDR representations and terminal encodings
-such as GGUF.
+**Compares:**
+- FP16
+- INT8
+- DTDR-INT8
+- Secondary lossless compression (ZIP)
 
-Focus:
-- DTDR storage size
-- secondary lossless compression potential
-- evidence that DTDR is not entropy-saturated compression
+**Focus:**
+- Persistent storage footprint
+- Evidence that DTDR is not entropy-saturated compression
+- Residual structural compressibility
 
-See: `05_storage_accounting/README.md`
+**Requirements:** Large model downloads required for full demonstration
 
 ---
 
-## Suggested Reading Order
+## External Downloads
 
-1. **Primary Demonstration**  
-   Concrete, human-verifiable illustration of DTDR behaviour.
+Some experiments require external resources that are **not included in the repository**:
 
-2. **Experiment 01**  
-   Establishes DTDR as a persistent representation that preserves computation.
+- HuggingFace model downloads (e.g. `mistralai/Mistral-7B-Instruct-v0.3`)
+- GloVe embedding datasets
+- Public-domain texts (downloaded automatically)
 
-3. **Experiment 02**  
-   Shows consequences of treating DTDR as a primary computational domain.
+Ensure you have adequate disk space, sufficient RAM, and a stable internet connection before running these experiments.
 
-4. **Experiments 03 & 04**  
-   Explore similarity search and robustness under degradation.
+---
 
-5. **Experiment 05**  
-   Quantifies storage characteristics and residual structure.
+## Purpose of This Directory
 
-Additional experiments may be added as the framework evolves.
+This folder is **not intended as a production framework**. It is a structured collection of controlled experiments designed to:
+
+- Test DTDR hypotheses
+- Demonstrate compute-capable transform-domain representations
+- Explore robustness and degradation behaviour
+- Evaluate storage properties
+- Investigate ANN routing behaviour
+
+Each experiment includes its own `README` explaining the hypothesis, methodology, measured outcomes, and interpretation.
