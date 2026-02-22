@@ -1,5 +1,7 @@
 # Experiment 02 — End-to-End ANN Search Entirely in the DTDR Domain
 
+This experiment continues to demonstrate end-to-end search entirely in the DTDR domain but the ANN dilution signal evidence has been supplanted by more recent evidence. See the root README for more.
+
 ## Overview
 
 This experiment demonstrates an **end-to-end approximate nearest-neighbour (ANN) search pipeline**
@@ -151,4 +153,5 @@ Baseline:
 
 ```powershell
 python experiment02_dtdr_ivf_hnsw_rabitq.py --n 50000 --q 200 --d 256 --nlist 256 --nprobe 8
+
 python nprobe4.py --n 50000 --q 200 --d 256 --nlist 256 --nprobe 4
