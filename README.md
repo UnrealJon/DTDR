@@ -26,7 +26,7 @@ DTDR functions as a persistent computational representation, not a compression c
 - Substantial residual lossless compressibility (ZIP)
 - Graceful degradation under corruption
 - End-to-end ANN search in transform domain
-- Transform-domain micro-aggregation signals for routing
+- Hierarchical trajectory routing: 8.7× candidate reduction at equivalent recall on SIFT1M
 
 ---
 
@@ -35,7 +35,7 @@ DTDR functions as a persistent computational representation, not a compression c
 DTDR-compressed model parameters can be reconstructed to numerically working precision sufficient for standard inference.
 
 | Model | FP16 | DTDR-INT8 | Compression | Cosine Similarity |
-|------|------|-----------|-------------|------------------|
+|-------|------|-----------|-------------|-------------------|
 | Mistral-7B | ~14.5 GB | ~6.7 GB | ~2.2× | 0.9998 |
 
 Inference throughput remains comparable to FP16 baselines.
@@ -51,7 +51,7 @@ DTDR representations retain structured regularity in the transform domain.
 Measured on INT8 Mistral-7B:
 
 | Representation | Stored Size | ZIP Size | Additional Reduction |
-|---------------|-------------|----------|----------------------|
+|----------------|-------------|----------|----------------------|
 | FP16 | ~14.5 GB | ~14.4 GB | ~0–1% |
 | INT8 GGUF | ~8.2 GB | ~7.9 GB | ~3–4% |
 | **INT8 DTDR** | **~6.7 GB** | **~4.4–4.7 GB** | **~30–35%** |
@@ -64,10 +64,8 @@ Secondary ZIP compression is optional and orthogonal to DTDR.
 
 DTDR was evaluated under identical random byte corruption compared to FP16 safetensors.
 
-Observed behaviour:
-
 | Representation | Corruption Behaviour |
-|---------------|----------------------|
+|----------------|----------------------|
 | FP16 | Catastrophic numerical failure at small corruption levels |
 | DTDR | Smooth statistical degradation over orders of magnitude greater corruption |
 
@@ -79,80 +77,53 @@ See: `experiments/04_graceful_degradation/`
 
 ## 4. End-to-End ANN in DTDR Domain
 
-DTDR supports ANN pipelines entirely within the transform domain.
-
-Experiment 02 integrates:
-
-- IVF partitioning
-- HNSW per-list search
-- Binary reranking
-- Transform-domain scoring
-
-All without reconstructing full-precision vectors.
+DTDR supports ANN pipelines operating entirely within the transform domain, integrating IVF partitioning, HNSW per-list search, binary reranking, and transform-domain scoring — without reconstructing full-precision vectors.
 
 See: `experiments/02_dtdr_end_to_end_search/`
 
 ---
 
-## 5. Micro-Dilution Routing Signal
+## 5. Hierarchical Trajectory Routing
 
-Earlier versions of this repository reported large recall gains from a “dilution evidence” heuristic.  
-Subsequent corrections revealed those gains were overstated due to timing scope and evaluation inconsistencies.
+DTDR's transform-domain structure enables a hierarchical routing signal inside IVF lists. Rather than evaluating all vectors in each probed list, a binary tree of segment means guides beam-search descent to geometrically promising leaf candidates.
 
-The revised approach evaluates a level-1 transform-domain aggregation:
+### How It Works
 
-For each IVF list, pairwise sums of vectors are precomputed:
+For each IVF list, vectors are grouped into bags of 32. A binary tree is precomputed across 5 levels, storing the mean of progressively smaller segments at each node. At query time:
 
-u_k = normalize(x_{2k} + x_{2k+1})
+1. All bags are scored cheaply by L2-proxy distance to the root mean: `score = 2·q·mean − ‖mean‖²`
+2. The top-scoring bags are selected
+3. Beam descent through the tree levels localises candidates to the most promising leaves
+4. Leaf candidates are deduplicated and reranked by exact L2
 
-At query time, lists are scored using:
+Node squared norms are precomputed at index build time, so each node evaluation costs a single dot product at query time.
 
-s(list) = max_k (q · u_k)  or  top-k mean
+### Results on SIFT1M (10,000 queries, full 1M index)
 
-On SIFT1M (200k subset, cosine-consistent GT, nprobe=1):
+| Method | Candidates evaluated | Recall@10 |
+|--------|---------------------|-----------|
+| Flat IVF1024, nprobe=8 (published baseline) | ~7,812 | ~0.57 |
+| **Trajectory router, nprobe=8** | **899** | **0.580** |
+| Trajectory router, nprobe=16 | 1,796 | 0.657 |
+| Trajectory router, nprobe=32 | 3,577 | 0.698 |
 
-| Routing Method | List Hit-Rate |
-|----------------|---------------|
-| Centroid only | 0.4865 |
-| + Micro-dilution (level-1) | 0.4915 |
+At nprobe=8: **8.7× fewer candidate evaluations** at equivalent recall to the flat IVF baseline.
 
-This represents a small but measurable improvement (~+1%) at ~+2ms/query CPU overhead in the current prototype.
+Candidate counts scale predictably as approximately `nprobe × 112`, making the system deterministic — an operational advantage in latency-sensitive environments where flat IVF candidate counts vary with list size distribution.
 
-Key observations:
+A further finding: increasing `top_bags` from 32 to 64 produces identical candidate counts but measurably higher recall at each nprobe level. The beam descent is selecting *different* candidates, not more of them — confirming the tree routing is making genuine discriminative decisions rather than simply widening the search.
 
-- Deep hierarchical dilution does not improve routing.
-- Signal is concentrated in shallow (level-1) aggregation.
-- Micro-aggregation behaves as a secondary routing feature.
-- The effect is incremental, not transformative.
+See: `experiments/06_trajectory_routing/`
 
-The result is reproducible and provided transparently.
+### Relationship to Earlier Micro-Dilution Work
 
----
+Earlier versions of this repository reported a shallow (level-1) transform-domain aggregation signal producing ~+1% list hit-rate improvement at nprobe=1 on a 200K SIFT subset. That result was reproducible but incremental.
 
-## 6. What Dilution Is — and Is Not
-
-Dilution is not a navigable tree search structure.
-
-Deep aggregation collapses discriminative signal.
-
-However, shallow transform-domain mixing produces a measurable list-level containment signal.
-
-This signal can:
-
-- Slightly improve IVF routing
-- Act as a secondary ranking feature
-- Operate entirely in transform domain
-
-It does not replace centroids or graph traversal.
+The trajectory routing experiments reported here supersede that work. The key advance is integrating the hierarchical signal into a full end-to-end pipeline evaluated under standard benchmark conditions (full 1M index, 10,000 queries, unfiltered ground truth), where the routing reduction is an order of magnitude rather than incremental.
 
 ---
 
-## 7. Repository Structure
-
-
----
-
-## Repository Structure
+## 6. Repository Structure
 
 ```text
 experiments/
@@ -162,18 +133,20 @@ experiments/
 ├── 04_graceful_degradation/     # Quantisation and corruption robustness
 │   └── dtdr_disk_corruption/    # On-disk corruption study (FP16 vs DTDR)
 ├── 05_storage_accounting/       # Storage sizing and residual compressibility
+├── 06_trajectory_routing/       # Hierarchical trajectory routing on SIFT1M
 DTDR_RAG_double_transform_demo.ipynb
+```
 
-Patent & Commercial Licensing
+---
 
-UK patent application under accelerated examination (Green Channel)
+## Patent & Commercial Licensing
 
+UK patent application under accelerated examination (Green Channel)  
 UK Patent Application No. GB2602157.6
 
 This repository is provided for research and evaluation purposes.
 
-For commercial licensing, strategic partnerships, or IP inquiries:
-
+For commercial licensing, strategic partnerships, or IP inquiries:  
 Contact: dtdr@multiverse1.com
 
-See LICENSE_NOTICE.md for evaluation terms.
+See `LICENSE_NOTICE.md` for evaluation terms.
