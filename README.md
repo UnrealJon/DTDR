@@ -26,8 +26,7 @@ DTDR functions as a persistent computational representation, not a compression c
 - Substantial residual lossless compressibility (ZIP)
 - Graceful degradation under corruption
 - End-to-end ANN search in transform domain
-- Hierarchical trajectory routing: 8.7× candidate reduction at equivalent recall on SIFT1M
-
+- Hierarchical trajectory routing: ~8–9× candidate reduction at equivalent recall on SIFT1M (IVF1024 baseline)
 ---
 
 ## 1. Model Storage & Inference
