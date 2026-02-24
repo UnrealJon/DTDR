@@ -27,4 +27,5 @@ I've deliberately left the cues of collaboration visible because removing them w
 
 ## The Relevant Question
 
-To my mind when it comes to creative scientific content, the relevant question is not whether AI has been involved, but whether the author understands the work and can defend it. I am pleased to be able to assert that I can.
+
+To my mind when it comes to creative scientific content, the relevant question is not whether AI has been involved, but whether the author understands the work and can defend it. That has been the approach in these endeavours. 
