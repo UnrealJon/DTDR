@@ -8,3 +8,5 @@ This paper formalises representation-level confidentiality and completeness-gate
 
 Related repository experiments: see /experiments
 
+DOI:
+10.5281zenodo.18760874
