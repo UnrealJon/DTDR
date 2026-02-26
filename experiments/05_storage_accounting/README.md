@@ -1,80 +1,72 @@
-# Experiment 05 — DTDR Storage Accounting
+# Experiment: Residual Lossless Compressibility of DTDR-INT8 vs GGUF Q8_0 (Mistral-7B)
 
 ## Purpose
 
-This experiment provides transparent accounting of the **persistent storage footprint**
-of numerical data stored in a **Distributed Transform-Domain Representation (DTDR)**,
-relative to conventional floating-point and quantised representations.
+This experiment measures **residual lossless compressibility** after INT8 quantisation, comparing:
 
-The objective is to quantify storage reduction while clarifying the role of DTDR as a
-**persistent stored representation**, distinct from both runtime inference formats and
-conventional compression schemes.
+- a conventional INT8 baseline representation (**GGUF Q8_0**), and
+- a **DTDR-INT8** (Hadamard-transform + INT8 quantised) persistent transform-domain artefact.
 
----
+The hypothesis is that DTDR produces a **non-terminal** representation at the quantisation stage, retaining enough statistical structure to permit **substantially greater additional lossless compression** (e.g. ZIP/DEFLATE) than the baseline.
 
-## Method Overview
-
-1. A reference model is stored in a conventional floating-point format (FP16).
-2. The same numerical parameters are stored in DTDR form using a structured orthogonal
-   transform and INT8 quantisation.
-3. Persistent storage sizes are compared.
-4. Residual compressibility under standard lossless compression (ZIP) is evaluated.
-5. The reconstruction pathway to working numerical precision is described qualitatively.
-
-No runtime performance benchmarking or inference timing is performed in this experiment.
+This is relevant to:
+- model distribution and storage,
+- transport bandwidth reduction,
+- and the claim that DTDR does not saturate entropy at the quantisation stage.
 
 ---
 
-## Observations
+## Summary of Result (this run)
 
-- DTDR enables a substantial reduction in persistent storage relative to FP16
-  representations.
-- DTDR representations are stored as the **primary persistent format**, not as a
-  transient preprocessing artefact.
-- Reconstruction to working numerical precision is performed once at initialisation
-  and does not require specialised execution kernels.
-- After reconstruction, standard inference infrastructure may be used unchanged.
+| Representation | Raw Size (GB) | Zipped Size (GB) | Additional Lossless Reduction |
+|---|---:|---:|---:|
+| GGUF Q8_0 | 7.167 | 6.902 | 3.7% |
+| DTDR INT8 | 6.751 | 4.825 | 28.5% |
 
-These observations support the claim that DTDR decouples **persistent storage format**
-from **working computational representation**.
+Raw sizes and compressed sizes were measured in bytes on disk. ZIP was produced using **Python `zipfile` with ZIP64 enabled** and **DEFLATE** compression.
 
 ---
 
-## Secondary Lossless Compression
+## Artefacts Used
 
-DTDR representations retain structured statistical regularities following transform
-and quantisation. As a result, DTDR-stored parameter files exhibit substantial
-additional size reduction when subjected to conventional **lossless compression**
-tools such as ZIP.
+### Baseline (GGUF)
+- `mistral-7b-instruct-v0.2.Q8_0.gguf`
+- Example path used in this run:
+  - `G:\AI_demo\zip_demo_mistral\int8_baseline\mistral-7b-instruct-v0.2.Q8_0.gguf`
 
-By contrast, conventional FP16 and INT8 formats (e.g. GGUF-style representations)
-are typically close to entropy-saturated and exhibit little residual compressibility.
+### DTDR (Hadamard + INT8) artefact
+- `compressed_mistral_7b.pkl` (DTDR persistent transform-domain, INT8)
+- Example path used in this run:
+  - `G:\train_jw\compressed_mistral_7b.pkl`
+- Copied into experiment folder as:
+  - `G:\AI_demo\zip_demo_mistral\dtdr_int8_clean.pkl`
 
-Importantly:
-
-- DTDR does **not** rely on entropy coding.
-- Lossless compression is **optional and orthogonal** to DTDR.
-- All reported DTDR storage reductions are achieved **prior to** any ZIP compression.
-
-Where applied, secondary compression further reduces persistent storage and
-distribution size without affecting reconstruction or computation.
+> Note: The DTDR artefact is the **stored transform-domain INT8 representation** (not reconstructed FP16 safetensors).  
+> Reconstructed FP16 models are execution-time artefacts and are not used in this compressibility test.
 
 ---
 
-## Scope and Limitations
+## Environment
 
-- This experiment does not attempt to optimise secondary compression.
-- Runtime performance and inference throughput are addressed in other experiments.
-- Storage figures are representative and depend on model architecture, transform
-  choice, and quantisation parameters.
+- OS: Windows (PowerShell)
+- Python: invoked via `python` on PATH (virtualenv optional)
+- Compression method: Python standard library `zipfile` with ZIP64 + DEFLATE
+
+Why Python instead of PowerShell `Compress-Archive`?
+- On this system, PowerShell `Compress-Archive` fails on multi-GB files with:
+  - `Stream was too long.`
+- Python `zipfile` successfully creates ZIP64 archives for large files.
 
 ---
 
-## Conclusion
+## Reproducible Procedure
 
-This experiment demonstrates that DTDR provides reduced-footprint **persistent storage**
-of numerical model parameters while allowing reconstruction to a working numerical
-precision suitable for standard inference workflows.
+### 1) Prepare experiment working directory
 
-In addition, DTDR representations retain residual structure that enables substantial
-optional lossless compression, further reducing storage and transmission size.
+Example working directory used:
+- `G:\AI_demo\zip_demo_mistral`
+
+Copy DTDR artefact into the folder so both files are local and comparable:
+
+```powershell
+Copy-Item "G:\train_jw\compressed_mistral_7b.pkl" "G:\AI_demo\zip_demo_mistral\dtdr_int8_clean.pkl"
