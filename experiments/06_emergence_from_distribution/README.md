@@ -135,3 +135,13 @@ SIFT1M dataset
 GloVe 100d embeddings
 
 Adjust paths at top of script.
+
+python progressive_emergence_demo_v2.py
+Requires:
+
+Pre-compressed model weights (see repo root)
+
+HuggingFace cache directory
+
+
+
