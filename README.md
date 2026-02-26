@@ -45,17 +45,25 @@ See: `experiments/01_model_inference/`
 
 ## 2. Residual Lossless Compression
 
-DTDR representations retain structured regularity in the transform domain.
+DTDR representations retain structured statistical regularity in the transform domain after quantisation.
 
-Measured on INT8 Mistral-7B:
+Measured on Mistral-7B INT8 artefacts using Python zipfile (ZIP64 + DEFLATE, single-file archives):
 
-| Representation | Stored Size | ZIP Size | Additional Reduction |
-|----------------|-------------|----------|----------------------|
-| FP16 | ~14.5 GB | ~14.4 GB | ~0–1% |
-| INT8 GGUF | ~8.2 GB | ~7.9 GB | ~3–4% |
-| **INT8 DTDR** | **~6.7 GB** | **~4.4–4.7 GB** | **~30–35%** |
+Representation	Stored Size (bytes)	ZIP Size (bytes)	Residual Reduction
+GGUF Q8_0	7,695,857,952	7,411,219,447	3.70%
+DTDR INT8	7,248,464,396	5,180,785,451	28.52%
+
+Residual Reduction is defined as:
+
+(Stored − ZIP) / Stored
+
+Compression was performed using standard ZIP (Deflate) with identical settings across artefacts. No transform-aware compression was applied.
+
+The DTDR representation exhibits substantial residual lossless compressibility beyond quantised storage, indicating preserved structured redundancy in the transform domain.
 
 Secondary ZIP compression is optional and orthogonal to DTDR.
+
+See: experiments/05_storage_accounting/
 
 ---
 
