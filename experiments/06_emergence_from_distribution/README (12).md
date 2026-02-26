@@ -1,156 +1,137 @@
-# Emergence & Guided Reconstruction Experiments
+# 06 – Behaviour Under Partial Completeness
 
-This folder contains experiments demonstrating how DTDR-stored models behave when **partially known**.
+This folder characterises how DTDR representations behave when only a fraction of transform coefficients is available.
 
-The central question is:
+It demonstrates that DTDR exhibits **two distinct utility regimes** under progressive coefficient incompleteness:
 
-> Does a DTDR model fail because information is missing, or because the reconstruction problem is under-constrained?
+1. **Geometric regime** – similarity search over embeddings  
+2. **Functional regime** – generative inference using model weights  
 
-The experiments progressively reconstruct a DTDR-compressed model using only a fraction of its stored coefficients and compare different ways of filling the missing portions.
-
----
-
-## Concept
-
-Three completion strategies are tested:
-
-| Method      | Meaning               |
-| ----------- | --------------------- |
-| Zero fill   | No prior knowledge    |
-| Random fill | Incorrect prior       |
-| Guided fill | Weak compatible prior |
-
-Observed behaviour:
-
-| Condition            | Behaviour                            |
-| -------------------- | ------------------------------------ |
-| Too few coefficients | No coherent output                   |
-| Random completion    | Stable nonsense                      |
-| Weak aligned prior   | Gradual recovery of correct language |
-
-This demonstrates:
-
-> DTDR models behave like constraint systems rather than parameter lists.
-
-The model is not merely degraded when incomplete — it is **underdetermined**.
-Providing even a weak compatible prior stabilises reconstruction.
+These regimes behave differently because they arise from different mathematical structures (linear projection vs nonlinear constraint satisfaction).
 
 ---
 
-## Files
+# Overview
 
-### `progressive_emergence_demo.py`
+Let:
 
-Original emergence experiment.
+\[
+\rho = \frac{\text{number of available coefficients}}{\text{total coefficients}}
+\]
 
-Shows the sharp functional threshold when reconstructing a DTDR model using only a fraction of stored coefficients.
+denote the **coefficient completeness ratio**.
 
-Purpose:
-
-* Demonstrates emergence behaviour
-* Establishes difference between truncation and corruption
-
----
-
-### `progressive_emergence_demo_v2.py`
-
-Guided reconstruction experiment.
-
-Extends the first experiment by introducing a weak aligned prior (slightly corrupted model) to guide reconstruction.
-
-Purpose:
-
-* Tests whether failure is caused by missing data or missing constraints
-* Demonstrates stabilisation from compatible priors
+We progressively restrict access to coefficients and measure semantic utility.
 
 ---
 
-## Requirements
+# Regime A — Geometric Utility (Embeddings)
 
-* Python ≥ 3.10
-* PyTorch
-* Transformers
-* safetensors
-* A DTDR-compressed Mistral-7B `.pkl` file
+**File:** `urho_experiment.py`  
+**Datasets:**  
+- SIFT1M (geometric benchmark)  
+- GloVe-100d (semantic benchmark)
 
-The first run will automatically download the base Mistral tokenizer/model into a HuggingFace cache directory.
+**Metrics:**
+- Cosine similarity to original vectors
+- Recall@10
+
+## Result
+
+Across both datasets and dropout modes:
+
+\[
+U(\rho) \approx \rho
+\]
+
+Semantic utility scales approximately linearly with coefficient completeness.
+
+This holds for:
+- Random coefficient dropout
+- Block (contiguous shard-loss) dropout
+
+There is **no catastrophic collapse** for similarity tasks.
+
+This is the **geometric regime**.
 
 ---
 
-## Running the Experiments
+# Regime B — Functional Emergence (Model Weights)
 
-### 1) Baseline — Emergence Threshold
+**Files:**
+- `progressive_emergence_demo.py`
+- `progressive_emergence_demo_v2.py`
 
-Collapse when insufficient coefficients exist.
+These experiments apply DTDR-style partial reconstruction to stored neural network weights.
+
+## Result
+
+Inference quality exhibits nonlinear emergence behaviour:
+
+- Low ρ → incoherent output
+- Intermediate ρ → unstable output
+- Above threshold → coherent generative inference
+
+This is not linear degradation. It reflects nonlinear constraint satisfaction in deep networks.
+
+This is the **functional regime**.
+
+---
+
+# Interpretation
+
+DTDR induces two mathematically distinct behaviours:
+
+| Property | Geometric Regime | Functional Regime |
+|-----------|-----------------|------------------|
+| Operation type | Linear | Nonlinear |
+| Task | Similarity search | Generative inference |
+| Utility scaling | Proportional | Emergence-like |
+| Collapse threshold | No | Yes |
+
+These behaviours are not contradictory.
+
+Similarity preservation is governed by linear projection scaling.
+
+Generative coherence depends on nonlinear multi-layer constraint dynamics.
+
+---
+
+# Why This Matters
+
+The geometric regime enables:
+
+- Proportional confidentiality
+- Cost-scaling exfiltration resistance
+- Quantitative completeness gating
+- Secure vector database search without homomorphic overhead
+
+The functional regime suggests:
+
+- Model weight extraction may resist partial exposure more strongly
+- Emergence dynamics arise naturally in nonlinear inference systems
+
+---
+
+# Running the Experiments
+
+## U(ρ) Experiment
 
 ```bash
-python progressive_emergence_demo_v2.py \
-  --pkl "mistral_7b_compressed_2x.pkl" \
-  --mode zero
-```
+python urho_experiment.py
 
----
+Outputs:
 
-### 2) Random Completion — Incorrect Constraints
+JSON result files
 
-Produces stable but meaningless output.
+Console tables
 
-```bash
-python progressive_emergence_demo_v2.py \
-  --pkl "mistral_7b_compressed_2x.pkl" \
-  --mode random
-```
+Plot-ready data
 
----
+Requires:
 
-### 3) Guided Reconstruction — Weak Prior
+SIFT1M dataset
 
-Gradual recovery of coherent language.
+GloVe 100d embeddings
 
-```bash
-python progressive_emergence_demo_v2.py \
-  --pkl "mistral_7b_compressed_2x.pkl" \
-  --anchor-pkl "compressed_mistral_7b_f1e-06_s0.pkl" \
-  --mode guided
-```
-
----
-
-## Output
-
-The script produces:
-
-* Console text samples at each reconstruction fraction
-* Cosine similarity measurements
-* Top-token overlap metrics
-* Emergence curve plots (`.png` + `.csv`)
-
----
-
-## Interpretation
-
-These experiments show a fundamental distinction:
-
-| Representation type  | Behaviour when incomplete              |
-| -------------------- | -------------------------------------- |
-| Conventional weights | degraded but functional                |
-| DTDR                 | non-functional until constraints close |
-
-Adding a weak compatible prior converts the problem from:
-
-> unsolvable → solvable
-
-This indicates DTDR stores a **solution manifold**, not independent parameters.
-
----
-
-## Why This Matters
-
-This behaviour explains multiple DTDR properties:
-
-* graceful degradation under corruption
-* sharp emergence threshold
-* recovery using weak priors
-* stability under noise
-
-The experiments therefore test the reconstruction dynamics of the representation, not compression performance.
+Adjust paths at top of script.
