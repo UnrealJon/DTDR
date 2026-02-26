@@ -27,6 +27,7 @@ DTDR functions as a persistent computational representation, not a compression c
 - Graceful degradation under corruption
 - End-to-end ANN search in transform domain
 - Hierarchical trajectory routing: ~8–9× candidate reduction at equivalent recall on SIFT1M (IVF1024 baseline)
+
 ---
 
 ## 1. Model Storage & Inference
@@ -43,15 +44,16 @@ See: `experiments/01_model_inference/`
 
 ---
 
-## 2. Residual Lossless Compression
+## 2. Residual Lossless Compressibility (Audited Run)
 
 DTDR representations retain structured statistical regularity in the transform domain after quantisation.
 
-Measured on Mistral-7B INT8 artefacts using Python zipfile (ZIP64 + DEFLATE, single-file archives):
+Measured on Mistral-7B INT8 artefacts using Python `zipfile` (ZIP64 + DEFLATE, single-file archives):
 
-Representation	Stored Size (bytes)	ZIP Size (bytes)	Residual Reduction
-GGUF Q8_0	7,695,857,952	7,411,219,447	3.70%
-DTDR INT8	7,248,464,396	5,180,785,451	28.52%
+| Representation | Stored Size (bytes) | ZIP Size (bytes) | Residual Reduction |
+|----------------|--------------------|------------------|-------------------|
+| GGUF Q8_0 | 7,695,857,952 | 7,411,219,447 | 3.70% |
+| **DTDR INT8** | **7,248,464,396** | **5,180,785,451** | **28.52%** |
 
 Residual Reduction is defined as:
 
@@ -63,7 +65,7 @@ The DTDR representation exhibits substantial residual lossless compressibility b
 
 Secondary ZIP compression is optional and orthogonal to DTDR.
 
-See: experiments/05_storage_accounting/
+See: `experiments/05_storage_accounting/`
 
 ---
 
@@ -122,38 +124,29 @@ A further finding: increasing `top_bags` from 32 to 64 produces identical candid
 
 See: `experiments/06_trajectory_routing/`
 
-### Relationship to Earlier Micro-Dilution Work
-
-Earlier versions of this repository reported a shallow (level-1) transform-domain aggregation signal producing ~+1% list hit-rate improvement at nprobe=1 on a 200K SIFT subset. That result was reproducible but incremental.
-
-The trajectory routing experiments reported here supersede that work. The key advance is integrating the hierarchical signal into a full end-to-end pipeline evaluated under standard benchmark conditions (full 1M index, 10,000 queries, unfiltered ground truth), where the routing reduction is an order of magnitude rather than incremental.
-
 ---
 
 ## 6. Repository Structure
 
 ```text
 experiments/
-├── 01_model_inference/          # DTDR model storage and inference reconstruction
-├── 02_dtdr_end_to_end_search/   # IVF + HNSW + RaBitQ-style ANN in DTDR domain
-├── 03_embedding_search/         # DTDR embeddings and similarity search
-├── 04_graceful_degradation/     # Quantisation and corruption robustness
-│   └── dtdr_disk_corruption/    # On-disk corruption study (FP16 vs DTDR)
-├── 05_storage_accounting/       # Storage sizing and residual compressibility
-├── 06_trajectory_routing/       # Hierarchical trajectory routing on SIFT1M
+├── 01_model_inference/
+├── 02_dtdr_end_to_end_search/
+├── 03_embedding_search/
+├── 04_graceful_degradation/
+│   └── dtdr_disk_corruption/
+├── 05_storage_accounting/
+├── 06_trajectory_routing/
 DTDR_RAG_double_transform_demo.ipynb
-```
 
----
+Patent & Commercial Licensing
 
-## Patent & Commercial Licensing
-
-UK patent application under accelerated examination (Green Channel)  
+UK patent application under accelerated examination (Green Channel)
 UK Patent Application No. GB2602157.6
 
 This repository is provided for research and evaluation purposes.
 
-For commercial licensing, strategic partnerships, or IP inquiries:  
+For commercial licensing, strategic partnerships, or IP inquiries:
 Contact: dtdr@multiverse1.com
 
-See `LICENSE_NOTICE.md` for evaluation terms.
+See LICENSE_NOTICE.md for evaluation terms.
