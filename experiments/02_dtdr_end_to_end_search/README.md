@@ -1,8 +1,8 @@
 # DTDR Spectral Trajectory ANN
 
-**Distributed Transform-Domain Representation (DTDR)** enables a hierarchical routing signal inside approximate nearest-neighbour (ANN) indices. This repository demonstrates that signal on structured embeddings and the SIFT1M benchmark.
+Distributed Transform-Domain Representation (DTDR) enables a hierarchical routing signal inside approximate nearest-neighbour (ANN) indices. This repository demonstrates that signal on structured embeddings and the SIFT1M benchmark.
 
-The goal is not to replace IVF or HNSW, but to show that DTDR's internal transform-domain structure enables *principled trajectory routing within IVF lists*, reducing candidate evaluations while maintaining recall.
+The goal is not to replace IVF or HNSW, but to show that DTDR's internal transform-domain structure enables principled trajectory routing within IVF lists, reducing candidate evaluations while maintaining recall.
 
 ---
 
@@ -13,13 +13,19 @@ On SIFT1M (1,000,000 vectors, 10,000 queries):
 | Method | Candidates evaluated | Recall@10 |
 |---|---|---|
 | Flat IVF1024, nprobe=8 (published baseline) | ~7,812 | ~0.57 |
-| **Trajectory router, nprobe=8** | **899** | **0.580** |
+| Trajectory router, nprobe=8 | 899 | 0.580 |
 | Trajectory router, nprobe=16 | 1,796 | 0.657 |
 | Trajectory router, nprobe=32 | 3,577 | 0.698 |
 
 At nprobe=8: **8.7× fewer candidate evaluations** at equivalent recall to the flat IVF baseline.
 
-Candidate counts scale predictably with routing parameters — approximately `nprobe × 112` — making the system deterministic and suitable for latency-sensitive production environments.
+Candidate counts scale predictably as approximately:
+
+```
+nprobe × 112
+```
+
+making the system deterministic — an operational advantage in latency-sensitive environments where flat IVF candidate counts vary with list size distribution.
 
 ---
 
@@ -27,10 +33,12 @@ Candidate counts scale predictably with routing parameters — approximately `np
 
 ```
 .
-├── 01_transform_domain_similarity.ipynb   # Spectral similarity emergence
-├── 02_spectral_tree_routing_poc.ipynb     # Hierarchical routing proof of concept
-├── 03_glove_spectral_ann_demo.ipynb       # Structured embeddings (GloVe300)
-├── 04_sift1m_full_trajectory_ann.ipynb    # Full SIFT1M end-to-end evaluation
+├── 01_transform_domain_similarity.ipynb
+├── 02_spectral_tree_routing_poc.ipynb
+├── 03_glove_spectral_ann_demo.ipynb
+├── 04_sift1m_full_trajectory_ann.ipynb
+├── dtdr_index_io.py
+├── convert_sift_to_dtdr.py
 └── README.md
 ```
 
@@ -42,29 +50,35 @@ Each notebook builds on the previous, progressing from theoretical demonstration
 
 ### 01 — Transform-Domain Similarity
 
-Demonstrates that nearest-neighbour identity can be recovered from partial Hadamard-domain measurements, and that a genuine spectral trajectory signal exists in DTDR space.
+Demonstrates that nearest-neighbour identity can be recovered from partial Hadamard-domain measurements and that a genuine spectral trajectory signal exists in DTDR space.
 
 Key observations:
+
 - Progressive emergence of top-1 identity from spectral coefficients
 - Strong correlation between similarity margin and stability depth
-- L2 certification bound significantly tighter than L1
+- L2 certification bound tighter than L1
 - Sublinear scaling of stable depth with structured embeddings
 
 ### 02 — Spectral Tree Routing (Proof of Concept)
 
-Implements hierarchical mean-of-segment routing inside fixed-size vector bags. Bridges the spectral similarity theory from notebook 01 to the routing mechanics used in the full pipeline.
+Implements hierarchical mean-of-segment routing inside fixed-size vector bags.
 
 Features:
-- Binary tree decomposition of bag vectors across 5 levels (bag size = 32)
-- Beam descent with controllable width
+
+- Binary tree decomposition (5 levels, bag size = 32)
+- Beam descent
 - Deterministic candidate budgeting
-- L2-consistent node scoring: `score = 2·q·mean − ‖mean‖²`
+- L2-consistent node scoring:
+
+```
+score = 2·q·mean − ‖mean‖²
+```
 
 ### 03 — GloVe Spectral ANN Demonstration
 
-Tests routing behaviour on GloVe-300 embeddings (50,000 vectors). Shows that the trajectory signal is stronger on real structured embeddings than on random vectors.
+Tests routing behaviour on GloVe-300 embeddings (50,000 vectors).
 
-Key results (200 queries):
+Example results (200 queries):
 
 | top_bags | beam | recall@1 | time (s) |
 |---|---|---|---|
@@ -75,15 +89,16 @@ Key results (200 queries):
 
 Full benchmark on SIFT1M (1M vectors, 10,000 queries) using IVF1024 coarse routing with trajectory routing within lists.
 
-**Setup:**
-- Dataset: SIFT1M (128-dimensional, L2 metric)
-- IVF: 1,024 centroids, MiniBatchKMeans
-- Bag size: 32 vectors
-- Tree levels: 5 (nodes: 1, 2, 4, 8, 16 per level)
-- Beam width: 2
-- Evaluation: standard recall@10, unfiltered ground truth
+**Setup**
 
-**Full sweep (2,000 queries):**
+- Dataset: SIFT1M (128-dimensional, L2 metric)
+- IVF: 1,024 centroids (MiniBatchKMeans)
+- Bag size: 32
+- Tree levels: 5
+- Beam width: 2
+- Evaluation: recall@10
+
+**Example Sweep (2,000 queries)**
 
 | nprobe | top_bags | recall@10 | mean candidates |
 |---|---|---|---|
@@ -94,7 +109,88 @@ Full benchmark on SIFT1M (1M vectors, 10,000 queries) using IVF1024 coarse routi
 | 16 | 64 | 0.658 | 1,798 |
 | 32 | 64 | 0.700 | 3,578 |
 
-Note: top_bags=32 and top_bags=64 produce **identical candidate counts** at each nprobe level. The recall difference arises from the beam descent selecting different candidates — not from evaluating more of them. This confirms the tree routing is making genuine discriminative decisions.
+Increasing `top_bags` improves recall without increasing candidate count — confirming genuine discriminative routing rather than brute widening.
+
+---
+
+## Optional: DTDR Persistent Storage Mode (SIFT1M)
+
+In addition to float32 `.npy` arrays, SIFT1M base vectors can be stored persistently in quantised structured orthogonal transform-domain form using `.dtdr`.
+
+This validates that the ANN routing pipeline remains functionally equivalent when built from DTDR storage.
+
+### Conversion
+
+From this directory:
+
+```bash
+python convert_sift_to_dtdr.py
+```
+
+This converts:
+
+```
+sift_base.npy  (~488 MB)
+```
+
+to:
+
+```
+sift1m_base.dtdr  (~122 MB)
+```
+
+### Storage Comparison
+
+| Format | Size |
+|---|---|
+| float32 .npy | 488 MB |
+| float32 zipped | 134 MB |
+| .dtdr (int8 Hadamard) | 122 MB |
+| .dtdr zipped | 87 MB |
+
+DTDR therefore achieves:
+
+- ~4× reduction vs float32 raw
+- ~1.5× reduction vs zipped float32
+- ~5.6× total reduction vs raw float32 when zipped
+
+### Running Notebook 04 Using DTDR
+
+Replace:
+
+```python
+X = np.load(BASE_NPY, mmap_mode="r")[:BASE_LIMIT].astype(np.float32)
+```
+
+with:
+
+```python
+from dtdr_index_io import read_dtdr_index
+
+X_full = read_dtdr_index("sift1m_base.dtdr")
+X = X_full[:BASE_LIMIT].astype(np.float32)
+```
+
+All routing code remains unchanged.
+
+### Observed Behaviour
+
+Using DTDR storage:
+
+| nprobe | top_bags | beam | recall@10 |
+|---|---|---|---|
+| 8 | 32 | 2 | 0.889 |
+| 16 | 32 | 2 | 0.922 |
+| 16 | 64 | 2 | 0.931 |
+
+Routing behaviour and candidate counts remain unchanged.
+
+This demonstrates:
+
+- Hierarchical routing survives structured orthogonal transform + quantisation
+- The ANN index can be persisted entirely in transform-domain form
+- DTDR retains residual lossless compressibility
+- No algorithmic modification is required
 
 ---
 
@@ -104,51 +200,31 @@ Note: top_bags=32 and top_bags=64 produce **identical candidate counts** at each
 
 ```
 Query
-  │
-  ▼
+  ↓
 IVF centroid shortlist (nprobe lists)
-  │
-  ▼  for each probed list:
-  │
-  ├─ Stage A: score all bags by L2-proxy to root mean
-  │           score = 2·q·mean − ‖mean‖²
-  │           keep top_bags bags
-  │
-  └─ Stage B: beam descent through tree levels 1→4
-              at each level, expand beam-width best children
-              collect leaf candidates from final level
-  │
-  ▼
-Deduplicate and rerank by exact L2
-  │
-  ▼
-Top-k results
+  ↓
+Stage A: score bags by L2-proxy to root mean
+Stage B: beam descent through tree
+  ↓
+Leaf candidates
+  ↓
+Exact L2 rerank
 ```
 
-### Why Mean-of-Segment Scoring Works
+Each tree node stores a segment mean. The L2-proxy:
 
-Each tree node stores the mean of a contiguous segment of vectors within a bag. The L2-proxy score `2·q·mean − ‖mean‖²` is a computationally cheap but geometrically principled filter: a segment whose mean is close to the query is likely to contain individual vectors close to the query. At each level of the tree, the segment size halves, progressively localising the search to the most promising leaves.
+```
+score = 2·q·mean − ‖mean‖²
+```
 
-This is the *trajectory* signal: query-to-segment-mean similarity that increases monotonically as segment size decreases, converging on a true near-neighbour. The rate of convergence is a function of DTDR's energy distribution across transform-domain coefficients.
+is geometrically principled and computationally cheap.
 
-### Node scoring precomputation
+### What This Demonstrates
 
-At index build time, `‖mean‖²` is computed and stored for every tree node. At query time, scoring any node requires only a single dot product `q·mean`. The full L2 proxy is then recovered without computing `‖q‖²` (constant across all nodes for a given query).
-
----
-
-## What This Demonstrates
-
-- DTDR-compatible hierarchical routing produces a real, measurable signal on a standard ANN benchmark
-- The signal localises promising regions *within* IVF lists without exhaustive evaluation
-- Candidate evaluations scale predictably with routing parameters
-- Equivalent recall to flat IVF is achievable with ~8-9× fewer distance computations
-
-## What This Does Not Claim
-
-- It does not replace HNSW or state-of-the-art ANN systems
-- It does not claim top performance on ANN benchmarks
-- It does not rely on heuristic pruning — the routing criterion is geometrically principled
+- DTDR-compatible hierarchical routing produces measurable signal on a standard ANN benchmark
+- Equivalent recall to flat IVF with ~8–9× fewer distance computations
+- Deterministic candidate budgeting
+- Persistent transform-domain storage compatible with ANN infrastructure
 
 ---
 
@@ -162,26 +238,32 @@ jupyter
 ```
 
 **Data:**
-- SIFT1M: http://corpus-texmex.irisa.fr/ (notebooks 01, 02, 04)
-- GloVe 300d: https://nlp.stanford.edu/projects/glove/ (notebook 03)
 
-Pre-convert SIFT `.fvecs` files to `.npy` format before running notebook 04.
+- SIFT1M: http://corpus-texmex.irisa.fr/
+- GloVe 300d: https://nlp.stanford.edu/projects/glove/
+
+Convert `.fvecs` to `.npy` before running notebook 04.
 
 ---
 
 ## Background
 
-DTDR (Distributed Transform-Domain Representation) is a computational memory architecture based on the Walsh-Hadamard transform. By distributing signal energy uniformly across transform-domain coefficients, DTDR enables structured approximation with certifiable error bounds.
+DTDR (Distributed Transform-Domain Representation) is a computational memory architecture based on the Walsh–Hadamard transform.
 
-These experiments form part of a broader research programme exploring DTDR as a general-purpose memory architecture for machine learning systems. Related work includes DTDR applied to LLM weight compression (2× GPU speedup, 5× DRAM traffic reduction on Mistral-7B) and to retrieval-augmented generation with graceful degradation under coefficient loss.
+By distributing signal energy across orthogonal coefficients and enabling structured quantisation, DTDR supports:
+
+- Persistent storage of high-dimensional semantic data
+- Hierarchical routing signals
+- Model parameter compression
+- Residual lossless compressibility
+
+Related work includes DTDR applied to LLM weight compression and retrieval-augmented generation.
 
 UK Patent Application GB2602157.6 (filed January 2026, Green Channel).
 
 ---
 
 ## Citation
-
-If you find this work useful:
 
 ```bibtex
 @misc{west2026dtdr,
