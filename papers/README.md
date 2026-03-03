@@ -3,9 +3,11 @@
 ## MaternityDatabaseInitiative
 A proposal to resurrect a confidential national maternity database utilising semantic encoding and searching
 
-## semantic_confidentiality
+## semantic_confidentiality DOI:10.5281zenodo.18760874
 the computational basis allowing confidential semantic searching
 Representation-Level Confidentiality and Completeness-Gated Search
+This paper formalises representation-level confidentiality and completeness-gated exfiltration resistance in transform-domain semantic storage systems.
+
 
 ## DLMH
 DTDR-Like Memory Hypothesis
@@ -19,13 +21,12 @@ an approach to neural model hallucination and human confabulation arguing a comm
 Author: Jonathan H. West  
 Version: 1.1 (2026)
 
-This paper formalises representation-level confidentiality and completeness-gated exfiltration resistance in transform-domain semantic storage systems.
-
 Related repository experiments: see /experiments
 
-DOI:
 
-10.5281zenodo.18760874
+
+
+
 
 
 
