@@ -63,5 +63,8 @@ corruption fractions.
 
 See `dtdr\_disk\_corruption/README.md` and `RESULTS.md` for details.
 
+The Jupyter notebook file DTDR_RAG_double_transform_demo.ipynb demonstrates graceful degradation behavious from corruption of vector database coefficients in a RAG search scenario
+
+
 
 
