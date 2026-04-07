@@ -96,41 +96,123 @@ The third regime — \*\*stable incorrect convergence\*\* — is the core phenom
 
 
 
-\## Experiment 1: Walsh-Space Model
+## Experiment 1: Walsh-Space / Neural Energy Model
 
+**File:** `walsh_dlmh_demo_upgraded.ipynb`
 
+### Goal
 
-\*\*File:\*\* `walsh\_dlmh\_demo\_upgraded.ipynb`
+To demonstrate that attractor behaviour arises naturally in distributed representations
+when viewed as an energy minimisation process.
 
+---
 
+### Conceptual framing
 
-\### Goal
+This experiment connects DLMH to classical neural models, particularly:
 
-Demonstrate that attractor behaviour emerges naturally in a distributed representation.
+- **Hopfield networks**
+- **Energy-based models**
 
+In these systems:
 
+> The network evolves toward low-energy states (attractors)
 
-\### Method
+---
 
-\- Represent signals in Walsh (Hadamard) space
+### Method
 
-\- Apply perturbations / truncations
+We construct a simplified analogue of a neural system:
 
-\- Measure reconstruction stability
+1. Represent signals in a **Walsh (Hadamard) basis**
+   - Orthogonal, distributed representation
+   - Analogous to population coding in neural systems
 
+2. Apply:
+   - truncation (information loss)
+   - perturbation (noise / corruption)
 
+3. Reconstruct the signal from degraded coefficients
 
-\### Key Result
+---
 
-\- Even with degraded or partial information, the system converges to \*\*stable outputs\*\*
+### Interpretation as an energy system
 
-\- These outputs may be incorrect but remain \*\*highly invariant\*\*
+The reconstruction process can be understood as:
 
+- Searching for a configuration consistent with the remaining signal
+- Settling into a **locally stable state**
 
+This is directly analogous to:
 
-👉 This provides a \*\*geometric / signal-level model\*\* of DLMH
+- Hopfield networks converging to stored patterns
+- Energy landscapes with multiple minima
 
+---
 
+### Key result
+
+Even when:
+
+- information is incomplete
+- coefficients are corrupted
+
+the system:
+
+- converges to **stable outputs**
+- often produces **consistent but incorrect reconstructions**
+
+---
+
+### DLMH interpretation
+
+This demonstrates that:
+
+> Stable incorrect outputs are a natural consequence of energy minimisation
+> in distributed systems with incomplete constraints.
+
+In other words:
+
+- The system is not "failing"
+- It is **successfully converging to the nearest attractor**
+
+---
+
+### Why Walsh space?
+
+The Walsh transform provides:
+
+- a structured orthogonal basis
+- fast computation (no dense matrices)
+- a direct analogue to distributed neural encoding
+
+It allows us to:
+
+- study attractor dynamics **without training a network**
+- isolate the geometry of the representation itself
+
+---
+
+### Connection to LLMs
+
+This experiment provides a **mechanistic analogy**:
+
+| Neural model            | LLM behaviour              |
+|------------------------|----------------------------|
+| Energy landscape       | Probability landscape      |
+| Attractor state        | Generated output           |
+| Partial input          | Prompt constraints         |
+| Energy minimisation    | Next-token optimisation    |
+
+---
+
+### Key insight
+
+> LLM hallucinations are not arbitrary errors,
+> but convergence to low-energy (high-probability) attractor states
+> under insufficient constraint.
+
+This aligns directly with the behavioural results in the Y-attractor experiment.
 
 ---
 
