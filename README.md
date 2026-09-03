@@ -23,10 +23,11 @@ DTDR functions as a persistent computational representation, not a compression c
 
 - 2–4× storage reduction for large models and embeddings
 - Compute-capable INT8 representation
-- Substantial residual lossless compressibility (ZIP)
 - Graceful degradation under corruption
 - End-to-end ANN search in transform domain
 - Hierarchical trajectory routing: ~8–9× candidate reduction at equivalent recall on SIFT1M (IVF1024 baseline)
+
+> **Note on residual ZIP compressibility:** an earlier version of this section reported a residual compressibility advantage for DTDR over conventional INT8. Further internal testing found that the specific artefact used to produce that figure had not actually undergone the DTDR transform. See the correction in Section 2 below.
 
 ---
 
@@ -44,26 +45,27 @@ See: `experiments/01_model_inference/`
 
 ---
 
-## 2. Residual Lossless Compressibility (Audited Run)
+## 2. Residual Lossless Compressibility — CORRECTED
 
-DTDR representations retain structured statistical regularity in the transform domain after quantisation.
+> **Correction (added following further internal testing):** the table and figures originally published in this section were measured on a build artefact (`dtdr_int8_clean.pkl`) that was subsequently found **not to have undergone the DTDR structured-transform step**. It was plain blockwise-quantised data in the original parameter domain. This was confirmed directly: the artefact's decompressed output matches the untransformed source weights closely (cosine ≈ 0.997) and does not match a genuinely transformed version of the same weights (cosine ≈ 0.0002, i.e. no meaningful relationship). The 28.52% figure below is real but does not demonstrate what it was described as demonstrating, and should not be relied on as evidence of a transform-attributable compressibility benefit.
 
-Measured on Mistral-7B INT8 artefacts using Python `zipfile` (ZIP64 + DEFLATE, single-file archives):
+**Original (uncorrected) figures, retained here for transparency:**
 
 | Representation | Stored Size (bytes) | ZIP Size (bytes) | Residual Reduction |
 |----------------|--------------------|------------------|-------------------|
 | GGUF Q8_0 | 7,695,857,952 | 7,411,219,447 | 3.70% |
-| **DTDR INT8** | **7,248,464,396** | **5,180,785,451** | **28.52%** |
+| DTDR INT8 (artefact not actually transformed — see correction above) | 7,248,464,396 | 5,180,785,451 | 28.52% |
 
-Residual Reduction is defined as:
+**Corrected findings, from re-testing with the transform genuinely applied to real weight data, using the same blockwise INT8 quantisation scheme, measured byte-weighted across all 2D parameter tensors:**
 
-(Stored − ZIP) / Stored
+| Configuration | Residual Reduction |
+|---|---|
+| Blockwise INT8, no transform applied | ~28.5% |
+| Blockwise INT8, DTDR transform genuinely applied | ~17.3% |
 
-Compression was performed using standard ZIP (Deflate) with identical settings across artefacts. No transform-aware compression was applied.
+Applying the transform **reduces** residual ZIP compressibility relative to the same quantisation scheme without it. This is mechanistically expected rather than anomalous: the transform's function is to distribute/decorrelate information across coefficients, which is the opposite of the redundancy a generic compressor like DEFLATE depends on to find anything to compress. The original 28.52% figure is better explained by the coarse block granularity used in that quantisation pass (256 rows sharing one scale factor) than by anything specific to DTDR's transform — a plain blockwise-quantised, untransformed representation using the same coarse blocks reproduces a comparable figure on its own.
 
-The DTDR representation exhibits substantial residual lossless compressibility beyond quantised storage, indicating preserved structured redundancy in the transform domain.
-
-Secondary ZIP compression is optional and orthogonal to DTDR.
+**Conclusion:** DTDR does not currently demonstrate a residual-lossless-compressibility advantage attributable to the transform step. This claim is withdrawn pending any further evidence. Compression behaviour is primarily a function of quantisation block granularity, independent of whether a structured transform is applied.
 
 See: `experiments/05_storage_accounting/`
 
@@ -79,6 +81,8 @@ DTDR was evaluated under identical random byte corruption compared to FP16 safet
 | DTDR | Smooth statistical degradation over orders of magnitude greater corruption |
 
 DTDR redistributes damage across coefficients rather than localising it.
+
+This specific comparison (transform-plus-quantisation vs. uncompressed FP16) has not been contradicted by later testing. Later, more extensive testing did find that the degradation-robustness *benefit specifically attributable to the transform step* (as opposed to quantisation alone, and as opposed to FP16) is real and reproducible on real model weights. That same later testing found other quantisation schemes in the wider field can exceed DTDR's robustness at matched corruption levels; a full comparative picture is still being assembled and is not reflected in the single comparison above.
 
 See: `experiments/04_graceful_degradation/`
 
@@ -138,8 +142,9 @@ experiments/
 ├── 05_storage_accounting/
 ├── 06_trajectory_routing/
 DTDR_RAG_double_transform_demo.ipynb
+```
 
-Patent & Commercial Licensing
+## Patent & Commercial Licensing
 
 UK patent application under accelerated examination (Green Channel)
 UK Patent Application No. GB2602157.6
